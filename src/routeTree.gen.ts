@@ -9,38 +9,205 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RoleSelectionRouteImport } from './routes/role-selection'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WorkerIndexRouteImport } from './routes/worker.index'
+import { Route as CustomerIndexRouteImport } from './routes/customer.index'
+import { Route as WorkerProfileRouteImport } from './routes/worker.profile'
+import { Route as WorkerNotificationsRouteImport } from './routes/worker.notifications'
+import { Route as WorkerApplicationsRouteImport } from './routes/worker.applications'
+import { Route as CustomerRequestRouteImport } from './routes/customer.request'
+import { Route as CustomerProfileRouteImport } from './routes/customer.profile'
+import { Route as CustomerNotificationsRouteImport } from './routes/customer.notifications'
+import { Route as CustomerMyRequestsRouteImport } from './routes/customer.my-requests'
+import { Route as WorkerJobIdRouteImport } from './routes/worker.job.$id'
+import { Route as CustomerServiceSlugRouteImport } from './routes/customer.service.$slug'
 
+const RoleSelectionRoute = RoleSelectionRouteImport.update({
+  id: '/role-selection',
+  path: '/role-selection',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WorkerIndexRoute = WorkerIndexRouteImport.update({
+  id: '/worker/',
+  path: '/worker/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerIndexRoute = CustomerIndexRouteImport.update({
+  id: '/customer/',
+  path: '/customer/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkerProfileRoute = WorkerProfileRouteImport.update({
+  id: '/worker/profile',
+  path: '/worker/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkerNotificationsRoute = WorkerNotificationsRouteImport.update({
+  id: '/worker/notifications',
+  path: '/worker/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkerApplicationsRoute = WorkerApplicationsRouteImport.update({
+  id: '/worker/applications',
+  path: '/worker/applications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerRequestRoute = CustomerRequestRouteImport.update({
+  id: '/customer/request',
+  path: '/customer/request',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerProfileRoute = CustomerProfileRouteImport.update({
+  id: '/customer/profile',
+  path: '/customer/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerNotificationsRoute = CustomerNotificationsRouteImport.update({
+  id: '/customer/notifications',
+  path: '/customer/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerMyRequestsRoute = CustomerMyRequestsRouteImport.update({
+  id: '/customer/my-requests',
+  path: '/customer/my-requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkerJobIdRoute = WorkerJobIdRouteImport.update({
+  id: '/worker/job/$id',
+  path: '/worker/job/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerServiceSlugRoute = CustomerServiceSlugRouteImport.update({
+  id: '/customer/service/$slug',
+  path: '/customer/service/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/role-selection': typeof RoleSelectionRoute
+  '/customer/my-requests': typeof CustomerMyRequestsRoute
+  '/customer/notifications': typeof CustomerNotificationsRoute
+  '/customer/profile': typeof CustomerProfileRoute
+  '/customer/request': typeof CustomerRequestRoute
+  '/worker/applications': typeof WorkerApplicationsRoute
+  '/worker/notifications': typeof WorkerNotificationsRoute
+  '/worker/profile': typeof WorkerProfileRoute
+  '/customer/': typeof CustomerIndexRoute
+  '/worker/': typeof WorkerIndexRoute
+  '/customer/service/$slug': typeof CustomerServiceSlugRoute
+  '/worker/job/$id': typeof WorkerJobIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/role-selection': typeof RoleSelectionRoute
+  '/customer/my-requests': typeof CustomerMyRequestsRoute
+  '/customer/notifications': typeof CustomerNotificationsRoute
+  '/customer/profile': typeof CustomerProfileRoute
+  '/customer/request': typeof CustomerRequestRoute
+  '/worker/applications': typeof WorkerApplicationsRoute
+  '/worker/notifications': typeof WorkerNotificationsRoute
+  '/worker/profile': typeof WorkerProfileRoute
+  '/customer': typeof CustomerIndexRoute
+  '/worker': typeof WorkerIndexRoute
+  '/customer/service/$slug': typeof CustomerServiceSlugRoute
+  '/worker/job/$id': typeof WorkerJobIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/role-selection': typeof RoleSelectionRoute
+  '/customer/my-requests': typeof CustomerMyRequestsRoute
+  '/customer/notifications': typeof CustomerNotificationsRoute
+  '/customer/profile': typeof CustomerProfileRoute
+  '/customer/request': typeof CustomerRequestRoute
+  '/worker/applications': typeof WorkerApplicationsRoute
+  '/worker/notifications': typeof WorkerNotificationsRoute
+  '/worker/profile': typeof WorkerProfileRoute
+  '/customer/': typeof CustomerIndexRoute
+  '/worker/': typeof WorkerIndexRoute
+  '/customer/service/$slug': typeof CustomerServiceSlugRoute
+  '/worker/job/$id': typeof WorkerJobIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/role-selection'
+    | '/customer/my-requests'
+    | '/customer/notifications'
+    | '/customer/profile'
+    | '/customer/request'
+    | '/worker/applications'
+    | '/worker/notifications'
+    | '/worker/profile'
+    | '/customer/'
+    | '/worker/'
+    | '/customer/service/$slug'
+    | '/worker/job/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/role-selection'
+    | '/customer/my-requests'
+    | '/customer/notifications'
+    | '/customer/profile'
+    | '/customer/request'
+    | '/worker/applications'
+    | '/worker/notifications'
+    | '/worker/profile'
+    | '/customer'
+    | '/worker'
+    | '/customer/service/$slug'
+    | '/worker/job/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/role-selection'
+    | '/customer/my-requests'
+    | '/customer/notifications'
+    | '/customer/profile'
+    | '/customer/request'
+    | '/worker/applications'
+    | '/worker/notifications'
+    | '/worker/profile'
+    | '/customer/'
+    | '/worker/'
+    | '/customer/service/$slug'
+    | '/worker/job/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  RoleSelectionRoute: typeof RoleSelectionRoute
+  CustomerMyRequestsRoute: typeof CustomerMyRequestsRoute
+  CustomerNotificationsRoute: typeof CustomerNotificationsRoute
+  CustomerProfileRoute: typeof CustomerProfileRoute
+  CustomerRequestRoute: typeof CustomerRequestRoute
+  WorkerApplicationsRoute: typeof WorkerApplicationsRoute
+  WorkerNotificationsRoute: typeof WorkerNotificationsRoute
+  WorkerProfileRoute: typeof WorkerProfileRoute
+  CustomerIndexRoute: typeof CustomerIndexRoute
+  WorkerIndexRoute: typeof WorkerIndexRoute
+  CustomerServiceSlugRoute: typeof CustomerServiceSlugRoute
+  WorkerJobIdRoute: typeof WorkerJobIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/role-selection': {
+      id: '/role-selection'
+      path: '/role-selection'
+      fullPath: '/role-selection'
+      preLoaderRoute: typeof RoleSelectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +215,101 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/worker/': {
+      id: '/worker/'
+      path: '/worker'
+      fullPath: '/worker/'
+      preLoaderRoute: typeof WorkerIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/': {
+      id: '/customer/'
+      path: '/customer'
+      fullPath: '/customer/'
+      preLoaderRoute: typeof CustomerIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/worker/profile': {
+      id: '/worker/profile'
+      path: '/worker/profile'
+      fullPath: '/worker/profile'
+      preLoaderRoute: typeof WorkerProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/worker/notifications': {
+      id: '/worker/notifications'
+      path: '/worker/notifications'
+      fullPath: '/worker/notifications'
+      preLoaderRoute: typeof WorkerNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/worker/applications': {
+      id: '/worker/applications'
+      path: '/worker/applications'
+      fullPath: '/worker/applications'
+      preLoaderRoute: typeof WorkerApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/request': {
+      id: '/customer/request'
+      path: '/customer/request'
+      fullPath: '/customer/request'
+      preLoaderRoute: typeof CustomerRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/profile': {
+      id: '/customer/profile'
+      path: '/customer/profile'
+      fullPath: '/customer/profile'
+      preLoaderRoute: typeof CustomerProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/notifications': {
+      id: '/customer/notifications'
+      path: '/customer/notifications'
+      fullPath: '/customer/notifications'
+      preLoaderRoute: typeof CustomerNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/my-requests': {
+      id: '/customer/my-requests'
+      path: '/customer/my-requests'
+      fullPath: '/customer/my-requests'
+      preLoaderRoute: typeof CustomerMyRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/worker/job/$id': {
+      id: '/worker/job/$id'
+      path: '/worker/job/$id'
+      fullPath: '/worker/job/$id'
+      preLoaderRoute: typeof WorkerJobIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/service/$slug': {
+      id: '/customer/service/$slug'
+      path: '/customer/service/$slug'
+      fullPath: '/customer/service/$slug'
+      preLoaderRoute: typeof CustomerServiceSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  RoleSelectionRoute: RoleSelectionRoute,
+  CustomerMyRequestsRoute: CustomerMyRequestsRoute,
+  CustomerNotificationsRoute: CustomerNotificationsRoute,
+  CustomerProfileRoute: CustomerProfileRoute,
+  CustomerRequestRoute: CustomerRequestRoute,
+  WorkerApplicationsRoute: WorkerApplicationsRoute,
+  WorkerNotificationsRoute: WorkerNotificationsRoute,
+  WorkerProfileRoute: WorkerProfileRoute,
+  CustomerIndexRoute: CustomerIndexRoute,
+  WorkerIndexRoute: WorkerIndexRoute,
+  CustomerServiceSlugRoute: CustomerServiceSlugRoute,
+  WorkerJobIdRoute: WorkerJobIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
