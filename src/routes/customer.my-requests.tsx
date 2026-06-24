@@ -7,7 +7,7 @@ import { seedRequests, services } from "@/lib/data";
 import { useState } from "react";
 
 export const Route = createFileRoute("/customer/my-requests")({
-  head: () => ({ meta: [{ title: "Rozgaar — My Requests" }] }),
+  head: () => ({ meta: [{ title: "Anga — My Requests" }] }),
   component: MyRequests,
 });
 

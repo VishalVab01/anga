@@ -4,7 +4,7 @@ export type Lang = "en" | "hi";
 
 const dict = {
   en: {
-    welcome: "Welcome to Rozgaar",
+    welcome: "Welcome to Anga",
     chooseLanguage: "Choose your language",
     whoAreYou: "Who are you?",
     worker: "Worker",

@@ -5,7 +5,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/worker/notifications")({
-  head: () => ({ meta: [{ title: "Rozgaar — Notifications" }] }),
+  head: () => ({ meta: [{ title: "Anga - Notifications" }] }),
   component: Notifs,
 });
 

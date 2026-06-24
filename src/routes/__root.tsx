@@ -55,7 +55,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1" },
-      { title: "Rozgaar — Find work, hire workers" },
+      { title: "Anga — Find work, hire workers" },
       { name: "description", content: "Simple app to find work or hire skilled workers near you." },
       { name: "theme-color", content: "#10b981" },
     ],

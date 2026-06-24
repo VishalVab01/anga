@@ -4,8 +4,8 @@ import { useT, type Lang } from "@/lib/i18n";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Rozgaar — Choose your language" },
-      { name: "description", content: "Welcome to Rozgaar. Choose English or Hindi to continue." },
+      { title: "Anga - Choose your language" },
+      { name: "description", content: "Welcome to Anga. Choose English or Hindi to continue." },
     ],
   }),
   component: LanguageSelect,
@@ -27,7 +27,7 @@ function LanguageSelect() {
           <div className="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-3xl bg-primary text-3xl text-primary-foreground font-extrabold shadow-lg">
             R
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Welcome to Rozgaar</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight">Welcome to Anga</h1>
           <p className="mt-2 text-base text-muted-foreground">रोज़गार में आपका स्वागत है</p>
           <p className="mt-6 text-sm font-medium text-foreground/70">Choose your language / भाषा चुनें</p>
         </div>

@@ -7,7 +7,7 @@ import { services, jobs } from "@/lib/data";
 import { useState } from "react";
 
 export const Route = createFileRoute("/worker/")({
-  head: () => ({ meta: [{ title: "Rozgaar — Worker home" }] }),
+  head: () => ({ meta: [{ title: "Anga - Worker home" }] }),
   component: WorkerHome,
 });
 

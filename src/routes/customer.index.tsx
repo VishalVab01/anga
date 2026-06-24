@@ -7,7 +7,7 @@ import { services } from "@/lib/data";
 import { useState } from "react";
 
 export const Route = createFileRoute("/customer/")({
-  head: () => ({ meta: [{ title: "Rozgaar — Book a service" }] }),
+  head: () => ({ meta: [{ title: "Anga — Book a service" }] }),
   component: CustomerHome,
 });
 

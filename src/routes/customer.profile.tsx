@@ -6,7 +6,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/customer/profile")({
-  head: () => ({ meta: [{ title: "Rozgaar — Profile" }] }),
+  head: () => ({ meta: [{ title: "Anga - Profile" }] }),
   component: Profile,
 });
 

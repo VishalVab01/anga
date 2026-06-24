@@ -3,7 +3,7 @@ import { HardHat, UserRound } from "lucide-react";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/role-selection")({
-  head: () => ({ meta: [{ title: "Rozgaar — Who are you?" }] }),
+  head: () => ({ meta: [{ title: "Anga - Who are you?" }] }),
   component: RoleSelect,
 });
 

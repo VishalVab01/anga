@@ -6,7 +6,7 @@ import { useT } from "@/lib/i18n";
 import { jobs, services } from "@/lib/data";
 
 export const Route = createFileRoute("/worker/job/$id")({
-  head: () => ({ meta: [{ title: "Rozgaar — Job details" }] }),
+  head: () => ({ meta: [{ title: "Anga - Job details" }] }),
   component: JobDetails,
   notFoundComponent: () => <div className="p-8 text-center">Job not found</div>,
 });

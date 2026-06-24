@@ -6,7 +6,7 @@ import { useT } from "@/lib/i18n";
 import { MapPin } from "lucide-react";
 
 export const Route = createFileRoute("/worker/applications")({
-  head: () => ({ meta: [{ title: "Rozgaar — My Applications" }] }),
+  head: () => ({ meta: [{ title: "Anga - My Applications" }] }),
   component: Applications,
 });
 

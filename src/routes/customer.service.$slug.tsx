@@ -4,7 +4,7 @@ import { services } from "@/lib/data";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/customer/service/$slug")({
-  head: () => ({ meta: [{ title: "Rozgaar — Book service" }] }),
+  head: () => ({ meta: [{ title: "Anga - Book service" }] }),
   component: BookService,
 });
 
