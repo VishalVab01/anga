@@ -102,6 +102,7 @@ const dict = {
     book: "बुक",
     noNotifications: "अभी कोई सूचना नहीं है",
     status: "स्थिति",
+    Hindi: "हिंदी",
   },
 } as const;
 
