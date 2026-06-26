@@ -1,67 +1,80 @@
-  import { createFileRoute, useNavigate } from "@tanstack/react-router";
-  import { useT, type Lang } from "@/lib/i18n";
-  import logo from "@/assets/logos/angalogo.png";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useT, type Lang } from "@/lib/i18n";
+import heroImg from "@/assets/anga-hero.png";
 
-  export const Route = createFileRoute("/")({
-    head: () => ({
-      meta: [
-        { title: "Anga - Choose your language" },
-        { name: "description", content: "Welcome to Anga. Choose English or Hindi to continue." },
-      ],
-    }),
-    component: LanguageSelect,
-  });
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Anga — Find work, hire workers" },
+      { name: "description", content: "Welcome to Anga. Find work or hire skilled workers near you." },
+    ],
+  }),
+  component: Landing,
+});
 
-  function LanguageSelect() {
-    const { setLang } = useT();
-    const navigate = useNavigate();
+function Landing() {
+  const { lang, setLang } = useT();
+  const navigate = useNavigate();
 
-    const pick = (l: Lang) => {
-      setLang(l);
-      navigate({ to: "/role-selection" });
-    };
+  const goNext = () => navigate({ to: "/role-selection" });
 
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="mx-auto flex min-h-screen max-w-md flex-col px-6 pt-16 pb-10">
-          <div className="flex flex-col items-center text-center">
-            <img
-              src={logo}
-              alt="Anga"
-              className="mb-0 w-20 sm:w-60 md:w-55 h-auto"
-            />
-            <h1 className="text-3xl font-extrabold tracking-tight">Welcome to Anga</h1>
-            <p className="mt-2 text-base text-muted-foreground">अंग में आपका स्वागत है</p>
-            <p className="mt-6 text-sm font-medium text-foreground/70">Choose your language / भाषा चुनें</p>
-          </div>
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto flex min-h-screen max-w-md flex-col px-6 pt-10 pb-8">
+        {/* Wordmark */}
+        <h1 className="text-center text-6xl font-extrabold tracking-tight text-primary">
+          anga
+        </h1>
 
-          <div className="mt-8 grid gap-4">
+        {/* Language toggle pill */}
+        <div className="mt-6 flex justify-center">
+          <div className="relative inline-flex rounded-full bg-primary/10 p-1">
             <button
-              onClick={() => pick("hi")}
-              className="card-soft card-soft-hover flex items-center gap-4 p-5 text-left"
+              onClick={() => setLang("hi")}
+              className={`relative z-10 min-w-[110px] rounded-full px-6 py-2.5 text-base font-semibold transition-colors ${
+                lang === "hi" ? "bg-primary text-primary-foreground shadow-md" : "text-primary"
+              }`}
             >
-              <span className="text-6xl leading-none">अ</span>
-              <div className="flex-1">
-                <div className="text-xl font-bold">हिन्दी</div>
-                <div className="text-sm text-muted-foreground">हिन्दी में जारी रखें</div>
-              </div>
+              हिंदी
             </button>
             <button
-              onClick={() => pick("en")}
-              className="card-soft card-soft-hover flex items-center gap-4 p-5 text-left"
+              onClick={() => setLang("en")}
+              className={`relative z-10 min-w-[110px] rounded-full px-6 py-2.5 text-base font-semibold transition-colors ${
+                lang === "en" ? "bg-primary text-primary-foreground shadow-md" : "text-primary"
+              }`}
             >
-              <span className="text-4xl leading-none">Aa</span>
-              <div className="flex-1">
-                <div className="text-xl font-bold">English</div>
-                <div className="text-sm text-muted-foreground">Continue in English</div>
-              </div>
+              English
             </button>
           </div>
+        </div>
 
-          <p className="mt-auto pt-10 text-center text-xs text-muted-foreground">
-            Made for everyone · सबके लिए
-          </p>
+        {/* Hero illustration */}
+        <div className="my-6 flex flex-1 items-center justify-center">
+          <img
+            src={heroImg}
+            alt="Worker holding phone with tools"
+            width={896}
+            height={896}
+            className="h-auto w-full max-w-sm object-contain"
+          />
+        </div>
+
+        {/* CTAs */}
+        <div className="grid gap-3">
+          <button
+            onClick={goNext}
+            className="w-full rounded-2xl bg-primary py-4 text-lg font-semibold text-primary-foreground shadow-md transition active:scale-[0.98] hover:brightness-95"
+          >
+            {lang === "hi" ? "खाता बनाएं" : "Create account"}
+          </button>
+          <button
+            onClick={goNext}
+            className="w-full rounded-2xl border-2 border-primary bg-card py-4 text-lg font-semibold text-primary transition active:scale-[0.98] hover:bg-primary/5"
+          >
+            {lang === "hi" ? "लॉग इन" : "Log in"}
+          </button>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
