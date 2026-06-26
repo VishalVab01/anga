@@ -52,6 +52,8 @@ const dict = {
     book: "Book",
     noNotifications: "You have no notifications yet",
     status: "Status",
+    saved: "Saved",
+    greeting: "Namaste",
   },
   hi: {
     welcome: "रोज़गार में आपका स्वागत है",
@@ -65,6 +67,7 @@ const dict = {
     whatService: "आपको कौन सी सेवा चाहिए?",
     search: "काम खोजें",
     nearby: "पास के काम",
+    greeting: "नमस्ते",
     myApps: "मेरे आवेदन",
     profile: "प्रोफ़ाइल",
     home: "होम",
@@ -103,8 +106,11 @@ const dict = {
     noNotifications: "अभी कोई सूचना नहीं है",
     status: "स्थिति",
     Hindi: "हिंदी",
+    Namaste: "नमस्ते",
+    saved: "सहेजा गया",
   },
 } as const;
+
 
 type Key = keyof typeof dict.en;
 

@@ -14,13 +14,13 @@ export const Route = createFileRoute("/worker/")({
 function WorkerHome() {
   const { t, lang } = useT();
   const [q, setQ] = useState("");
-  const filtered = jobs.filter((j) => j.title.toLowerCase().includes(q.toLowerCase()));
+  const filtered = jobs.filter((j) => j.title[lang].toLowerCase().includes(q.toLowerCase()));
 
   return (
     <PageShell bottomNav={<BottomNav role="worker" />}>
       <div className="space-y-6">
         <div>
-          <p className="text-sm text-muted-foreground">Namaste!</p>
+          <p className="text-sm text-muted-foreground">{t("greeting")}!</p>
           <h1 className="text-2xl font-extrabold">{t("findWork")}</h1>
         </div>
 
@@ -103,9 +103,9 @@ function JobCard({ job, lang }: { job: typeof jobs[number]; lang: Lang }) {
           {svc && <svc.icon className="h-6 w-6 text-primary" strokeWidth={2} />}
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-base font-bold">{job.title}</h3>
+          <h3 className="truncate text-base font-bold">{job.title[lang]}</h3>
           <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
-            <MapPin className="h-3 w-3" /> {job.location}
+            <MapPin className="h-3 w-3" /> {job.location[lang]}
           </p>
           <div className="mt-2 flex items-center justify-between">
             <span className="text-sm font-bold text-primary">₹{job.payment}</span>

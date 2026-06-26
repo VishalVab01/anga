@@ -13,24 +13,24 @@ export const Route = createFileRoute("/worker/job/$id")({
 
 function JobDetails() {
   const { id } = Route.useParams();
-  const { t } = useT();
+  const { t, lang } = useT();
   const navigate = useNavigate();
   const job = jobs.find((j) => j.id === id);
   if (!job) return <PageShell title="Not found" back="/worker"><p>Job not found</p></PageShell>;
   const svc = services.find((s) => s.slug === job.service);
 
   return (
-    <PageShell title={job.title} back="/worker">
+    <PageShell title={job.title[lang]} back="/worker">
       <div className="space-y-5">
         <div className="card-soft p-5">
           <div className="flex items-center gap-3">
-            <div className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-3xl">
-              {svc?.emoji}
-            </div>
+           <div className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary">
+            <MapPin className="h-7 w-7" />
+          </div>  
             <div className="min-w-0 flex-1">
-              <h2 className="text-lg font-bold">{job.title}</h2>
+              <h2 className="text-lg font-bold">{job.title[lang]}</h2>
               <p className="flex items-center gap-1 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4" /> {job.location}
+                <MapPin className="h-4 w-4" /> {job.location[lang]}
               </p>
             </div>
           </div>
@@ -39,7 +39,7 @@ function JobDetails() {
             <span className="text-xl font-extrabold text-primary">₹{job.payment}</span>
           </div>
           <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-            <CalendarDays className="h-4 w-4" /> {job.date}
+            <CalendarDays className="h-4 w-4" /> {job.date[lang]}
           </div>
         </div>
 
@@ -47,17 +47,17 @@ function JobDetails() {
           <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wide">
             {t("description")}
           </h3>
-          <p className="mt-2 text-base">{job.description}</p>
+          <p className="mt-2 text-base">{job.description[lang]}</p>
         </div>
 
         <div className="card-soft p-5">
           <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wide">Customer</h3>
           <div className="mt-3 flex items-center gap-3">
             <div className="grid h-12 w-12 place-items-center rounded-full bg-accent/10 text-lg font-bold text-accent">
-              {job.customer[0]}
+              {job.customer[lang].charAt(0)}
             </div>
             <div>
-              <p className="font-bold">{job.customer}</p>
+              <p className="font-bold">{job.customer[lang]}</p>
               <p className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Star className="h-3 w-3 fill-current text-amber-500" /> {job.rating}
               </p>
@@ -66,7 +66,7 @@ function JobDetails() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <button onClick={() => toast.success("Saved")} className="btn-outline">
+          <button onClick={() => toast.success(t("saved"))} className="btn-outline">
             <Bookmark className="h-4 w-4" /> {t("saveJob")}
           </button>
           <a href={`tel:${job.phone.replace(/\s/g, "")}`} className="btn-outline">

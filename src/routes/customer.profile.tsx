@@ -31,7 +31,7 @@ function Profile() {
         </div>
 
         <div className="card-soft divide-y divide-border">
-          <Row label={t("phone")} value="+91 98XXXXXX22" icon={<Phone className="h-4 w-4" />} />
+          <Row label={t("")} value="+91 98XXXXXX22" icon={<Phone className="h-4 w-4" />} />
           <Row label={t("address")} value="Andheri, Mumbai" icon={<MapPin className="h-4 w-4" />} />
         </div>
 

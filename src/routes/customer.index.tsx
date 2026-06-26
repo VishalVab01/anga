@@ -22,7 +22,9 @@ function CustomerHome() {
     <PageShell bottomNav={<BottomNav role="customer" />}>
       <div className="space-y-6">
         <div>
-          <p className="text-sm text-muted-foreground">Namaste 👋</p>
+          <p className="text-sm text-muted-foreground">
+            {t("greeting")}
+          </p>
           <h1 className="text-2xl font-extrabold">{t("whatService")}</h1>
         </div>
 
@@ -50,19 +52,24 @@ function CustomerHome() {
         </Link>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {list.map((s) => (
-            <Link
-              key={s.slug}
-              to="/customer/service/$slug"
-              params={{ slug: s.slug }}
-              className="card-soft card-soft-hover flex flex-col items-center gap-2 p-5 text-center"
-            >
-              <span className="text-4xl">{s.emoji}</span>
-              <span className="text-sm font-bold leading-tight">
-                {lang === "hi" ? s.hi : s.en}
-              </span>
-            </Link>
-          ))}
+          {list.map((s) => {
+            const Icon = s.icon;
+
+            return (
+              <Link
+                key={s.slug}
+                to="/customer/service/$slug"
+                params={{ slug: s.slug }}
+                className="card-soft card-soft-hover flex flex-col items-center gap-2 p-5 text-center"
+              >
+                <Icon className="h-10 w-10 text-primary" />
+
+                <span className="text-sm font-bold leading-tight">
+                  {lang === "hi" ? s.hi : s.en}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </PageShell>

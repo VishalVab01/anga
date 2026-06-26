@@ -25,27 +25,29 @@ function MyRequests() {
         )}
         {list.map((r) => {
           const svc = services.find((s) => s.slug === r.service);
+          const Icon = svc?.icon;
           return (
             <div key={r.id} className="card-soft p-4">
               <div className="flex items-start gap-3">
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-2xl">
-                  {svc?.emoji}
+                
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10">
+                  {Icon && <Icon className="h-6 w-6 text-primary" />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate font-bold">{lang === "hi" ? svc?.hi : svc?.en}</h3>
-                  <p className="text-xs text-muted-foreground">{r.date}</p>
+                  <p className="text-xs text-muted-foreground">{r.date[lang]}</p>
                   {r.worker && <p className="mt-0.5 text-xs">👷 {r.worker}</p>}
                 </div>
                 <span
                   className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
-                    r.status === "Open"
+                    r.status[lang] === "Open"
                       ? "bg-accent/15 text-accent"
-                      : r.status === "Assigned"
+                      : r.status[lang] === "Assigned"
                       ? "bg-success/15 text-success"
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {r.status}
+                  {r.status[lang]}
                 </span>
               </div>
               <div className="mt-3 grid grid-cols-3 gap-2">

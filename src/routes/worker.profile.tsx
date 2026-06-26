@@ -11,7 +11,29 @@ export const Route = createFileRoute("/worker/profile")({
 });
 
 function Profile() {
-  const { t } = useT();
+  const { t, lang } = useT();
+
+    const profile = {
+      name: {
+        en: "Suresh Kumar",
+        hi: "सुरेश कुमार",
+      },
+
+      skills: {
+        en: "Electrician, Plumber",
+        hi: "इलेक्ट्रीशियन, प्लंबर",
+      },
+
+      experience: {
+        en: "5 years",
+        hi: "5 वर्ष",
+      },
+
+      location: {
+        en: "Mumbai, MH",
+        hi: "मुंबई, महाराष्ट्र",
+      },
+    };
   const navigate = useNavigate();
 
   const logout = () => {
@@ -27,17 +49,30 @@ function Profile() {
           <div className="grid h-20 w-20 place-items-center rounded-full bg-primary text-3xl font-bold text-primary-foreground">
             S
           </div>
-          <h2 className="text-xl font-extrabold">Suresh Kumar</h2>
+          <h2 className="text-xl font-extrabold">
+            {profile.name[lang]}
+          </h2>
           <p className="flex items-center gap-1 text-sm text-muted-foreground">
             <Star className="h-4 w-4 fill-current text-amber-500" /> 4.7 · {t("rating")}
           </p>
         </div>
 
         <div className="card-soft divide-y divide-border">
-          <Row label={t("skills")} value="Electrician, Plumber" />
-          <Row label={t("experience")} value="5 years" />
-          <Row label={t("phone")} value="+91 98XXXXXX10" icon={<Phone className="h-4 w-4" />} />
-          <Row label={t("location")} value="Mumbai, MH" icon={<MapPin className="h-4 w-4" />} />
+          <Row
+              label={t("skills")}
+              value={profile.skills[lang]}
+            />
+
+            <Row
+              label={t("experience")}
+              value={profile.experience[lang]}
+            />
+
+            <Row
+              label={t("location")}
+              value={profile.location[lang]}
+              icon={<MapPin className="h-4 w-4" />}
+            />
         </div>
 
         <div className="grid gap-3">
