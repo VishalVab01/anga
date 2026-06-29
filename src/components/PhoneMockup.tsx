@@ -17,7 +17,7 @@ export function PhoneMockup({
           src={src}
           title={title}
           className="h-full w-full border-0 bg-background"
-          loading="lazy"
+          loading="eager"
         />
       </div>
     </div>

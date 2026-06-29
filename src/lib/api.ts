@@ -97,6 +97,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  warmup: () =>
+    fetch(`${API_URL}/health`, { method: "GET" }).catch(() => {
+      // Best-effort Render warmup. User-facing requests still handle real errors.
+    }),
   sendOtp: (phone: string) =>
     request<{ otp?: string; message: string }>("/auth/send-otp", {
       method: "POST",

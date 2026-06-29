@@ -23,15 +23,18 @@ function OtpScreen() {
   const { t, lang } = useT();
   const navigate = useNavigate();
   const [otp, setOtp] = useState("123456");
+  const [verifying, setVerifying] = useState(false);
   const phone = getPhone();
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    if (verifying) return;
     const role = getRole();
     if (!role) {
       navigate({ to: "/role-selection" });
       return;
     }
+    setVerifying(true);
     try {
       const result = await api.verifyOtp(phone, otp, role);
       setToken(result.token);
@@ -46,6 +49,8 @@ function OtpScreen() {
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not verify OTP");
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -73,8 +78,12 @@ function OtpScreen() {
           />
         </label>
 
-        <button type="submit" className="btn-primary w-full text-lg">
-          {t("verifyOtp")}
+        <button
+          type="submit"
+          disabled={verifying}
+          className="btn-primary w-full text-lg disabled:opacity-60"
+        >
+          {verifying ? (lang === "hi" ? "सत्यापित हो रहा है..." : "Verifying...") : t("verifyOtp")}
         </button>
       </form>
     </PageShell>

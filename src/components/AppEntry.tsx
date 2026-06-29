@@ -1,12 +1,18 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
+import { useEffect } from "react";
 import { useT } from "@/lib/i18n";
+import { api } from "@/lib/api";
 import { setAuthMode } from "@/lib/session";
 import heroImg from "@/assets/logos/newanga.png";
 
 export function AppEntry() {
   const { lang, setLang, t } = useT();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    void api.warmup();
+  }, []);
 
   return (
     <div className="anga-app-shell min-h-screen bg-background">

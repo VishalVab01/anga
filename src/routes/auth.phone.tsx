@@ -16,15 +16,18 @@ function PhoneScreen() {
   const { t, lang } = useT();
   const navigate = useNavigate();
   const [phone, setValue] = useState("");
+  const [sending, setSending] = useState(false);
   const mode = getAuthMode();
   const role = getRole();
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    if (sending) return;
     if (phone.replace(/\D/g, "").length < 10) {
       toast.error(lang === "hi" ? "सही मोबाइल नंबर डालें" : "Enter a valid mobile number");
       return;
     }
+    setSending(true);
     try {
       const result = await api.sendOtp(phone);
       setPhone(phone);
@@ -34,6 +37,8 @@ function PhoneScreen() {
       navigate({ to: "/auth/otp" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not send OTP");
+    } finally {
+      setSending(false);
     }
   };
 
@@ -68,8 +73,12 @@ function PhoneScreen() {
           />
         </label>
 
-        <button type="submit" className="btn-primary w-full text-lg">
-          {t("sendOtp")}
+        <button
+          type="submit"
+          disabled={sending}
+          className="btn-primary w-full text-lg disabled:opacity-60"
+        >
+          {sending ? (lang === "hi" ? "OTP भेज रहे हैं..." : "Sending OTP...") : t("sendOtp")}
         </button>
       </form>
     </PageShell>

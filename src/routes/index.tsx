@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { PhoneMockup } from "@/components/PhoneMockup";
+import { api } from "@/lib/api";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -101,6 +102,10 @@ function Landing() {
   const [showPhoneCue, setShowPhoneCue] = useState(true);
 
   useLandingAnimations(demoMode);
+
+  useEffect(() => {
+    void api.warmup();
+  }, []);
 
   useEffect(() => {
     if (!showPhoneCue || typeof window === "undefined") return;
