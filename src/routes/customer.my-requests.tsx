@@ -16,14 +16,24 @@ function MyRequests() {
   const { t, lang } = useT();
   const [apiJobs, setApiJobs] = useState<ApiJob[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     api
       .jobs("?mine=true")
-      .then((result) => setApiJobs(result.jobs))
-      .catch(() => setApiJobs([]))
+      .then((result) => {
+        setApiJobs(result.jobs);
+        setLoadFailed(false);
+      })
+      .catch(() => {
+        setApiJobs([]);
+        setLoadFailed(true);
+      })
       .finally(() => setLoading(false));
   }, []);
+
+  const demoRequests = loadFailed ? seedRequests : [];
+  const hasRequests = apiJobs.length > 0 || demoRequests.length > 0;
 
   return (
     <PageShell title={t("myRequests")} back="/customer" bottomNav={<BottomNav role="customer" />}>
@@ -33,7 +43,7 @@ function MyRequests() {
             Loading requests...
           </p>
         )}
-        {!loading && apiJobs.length === 0 && seedRequests.length === 0 && (
+        {!loading && !hasRequests && (
           <p className="rounded-2xl bg-muted p-6 text-center text-sm text-muted-foreground">
             {lang === "hi" ? "अभी कोई काम पोस्ट नहीं किया" : "No requests yet"}
           </p>
@@ -52,7 +62,7 @@ function MyRequests() {
                 applicants={job.applicants.length}
               />
             ))
-          : seedRequests.map((request) => (
+          : demoRequests.map((request) => (
               <RequestCard
                 key={request.id}
                 id={request.id}
@@ -119,7 +129,7 @@ function RequestCard({
           {t("cancelRequest")}
         </button>
         <Link
-          to="/customer/request/$id/applicants"
+          to="/customer/applicants/$id"
           params={{ id }}
           className="btn-primary px-2 py-2 text-xs"
         >

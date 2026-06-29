@@ -43,7 +43,9 @@ function WorkerHome() {
   }, []);
 
   const list = useMemo(() => {
-    const live = apiJobs.map(mapApiJob);
+    const live = [...apiJobs]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .map(mapApiJob);
     const fallback = fallbackJobs.map((job) => ({
       id: job.id,
       title: job.title[lang],

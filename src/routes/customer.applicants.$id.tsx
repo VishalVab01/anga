@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PageShell } from "@/components/PageShell";
 import { api, type ApiWorkerProfile } from "@/lib/api";
-import { serviceName, workers } from "@/lib/data";
+import { serviceName } from "@/lib/data";
 import { useT } from "@/lib/i18n";
 
-export const Route = createFileRoute("/customer/request/$id/applicants")({
+export const Route = createFileRoute("/customer/applicants/$id")({
   head: () => ({ meta: [{ title: "Anga - Applicants" }] }),
   component: Applicants,
 });
@@ -17,12 +17,13 @@ function Applicants() {
   const { t, lang } = useT();
   const [jobTitle, setJobTitle] = useState("");
   const [service, setService] = useState("");
-  const [applicants, setApplicants] = useState<
-    Array<{ applicationId: string; workerId: string; worker: ApiWorkerProfile }>
-  >([]);
+  const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
+    setLoading(true);
+    setError("");
     api
       .applicants(id)
       .then((result) => {
@@ -34,15 +35,17 @@ function Applicants() {
             .map((item) => ({
               applicationId: item.application._id,
               workerId: item.application.workerId,
+              status: item.application.status,
               worker: item.worker!,
             })),
         );
       })
-      .catch(() => setApplicants([]))
+      .catch((err) => {
+        setApplicants([]);
+        setError(err instanceof Error ? err.message : "Could not load applicants");
+      })
       .finally(() => setLoading(false));
   }, [id]);
-
-  const fallback = workers.slice(0, 2);
 
   return (
     <PageShell title={t("viewApplicants")} back="/customer/my-requests">
@@ -53,49 +56,33 @@ function Applicants() {
           </p>
           <h2 className="mt-1 text-lg font-extrabold">{jobTitle || "Posted job"}</h2>
           <p className="text-sm text-muted-foreground">
-            {loading ? "Loading..." : `${applicants.length || fallback.length} ${t("applicants")}`}
+            {loading ? "Loading..." : `${applicants.length} ${t("applicants")}`}
           </p>
         </div>
 
-        {!loading && applicants.length === 0 && (
-          <p className="rounded-2xl bg-muted p-4 text-center text-sm text-muted-foreground">
-            No applicants yet. Showing demo workers.
+        {error && (
+          <p className="rounded-2xl bg-destructive/10 p-4 text-center text-sm font-semibold text-destructive">
+            {error}
           </p>
         )}
 
-        {applicants.length > 0
-          ? applicants.map((item) => (
-              <ApplicantCard
-                key={item.applicationId}
-                jobId={id}
-                workerId={item.workerId}
-                worker={item.worker}
-              />
-            ))
-          : fallback.map((worker) => (
-              <ApplicantCard
-                key={worker.id}
-                jobId={id}
-                workerId={worker.id}
-                worker={{
-                  _id: worker.id,
-                  userId: worker.id,
-                  name: worker.name,
-                  phone: worker.phone,
-                  skills: [worker.skill],
-                  experience: worker.experience,
-                  expectedWage: worker.expectedWage,
-                  availableToday: worker.availableToday,
-                  preferredDistance: "5 km",
-                  location: worker.area,
-                  documentsUploaded: worker.documentUploaded,
-                  verified: worker.verified,
-                  rating: worker.rating,
-                  totalJobsCompleted: worker.completedJobs,
-                }}
-                demo
-              />
-            ))}
+        {!loading && applicants.length === 0 && (
+          <p className="rounded-2xl bg-muted p-4 text-center text-sm text-muted-foreground">
+            {lang === "hi"
+              ? "इस काम पर अभी कोई वास्तविक आवेदन नहीं आया है।"
+              : "No real applicants have applied to this job yet."}
+          </p>
+        )}
+
+        {applicants.map((item) => (
+          <ApplicantCard
+            key={item.applicationId}
+            jobId={id}
+            workerId={item.workerId}
+            status={item.status}
+            worker={item.worker}
+          />
+        ))}
       </div>
     </PageShell>
   );
@@ -104,17 +91,16 @@ function Applicants() {
 function ApplicantCard({
   jobId,
   workerId,
+  status,
   worker,
-  demo,
 }: {
   jobId: string;
   workerId: string;
+  status: string;
   worker: ApiWorkerProfile;
-  demo?: boolean;
 }) {
   const { t, lang } = useT();
   const assign = async () => {
-    if (demo) return toast.success(`${worker.name} assigned`);
     try {
       await api.assign(jobId, workerId);
       toast.success(`${worker.name} assigned`);
@@ -152,6 +138,9 @@ function ApplicantCard({
             )}
           </div>
         </div>
+        <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold capitalize text-primary">
+          {status}
+        </span>
       </Link>
       <div className="mt-3 grid grid-cols-2 gap-3">
         <a href={`tel:${worker.phone.replace(/\s/g, "")}`} className="btn-outline">
@@ -164,6 +153,13 @@ function ApplicantCard({
     </div>
   );
 }
+
+type Applicant = {
+  applicationId: string;
+  workerId: string;
+  status: string;
+  worker: ApiWorkerProfile;
+};
 
 function Pill({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (

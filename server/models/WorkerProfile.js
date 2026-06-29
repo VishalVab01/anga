@@ -11,6 +11,7 @@ const workerProfileSchema = new mongoose.Schema(
     availableToday: { type: Boolean, default: true },
     preferredDistance: { type: String, default: "5 km" },
     location: { type: String, default: "" },
+    photoUrl: { type: String, default: "" },
     documentsUploaded: { type: Boolean, default: false },
     verified: { type: Boolean, default: false },
     rating: { type: Number, default: 4.5 },

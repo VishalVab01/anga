@@ -35,6 +35,7 @@ profileRouter.put(
         availableToday: Boolean(body.availableToday ?? body.available),
         preferredDistance: body.preferredDistance || body.distance || "5 km",
         location: body.location || body.area || "",
+        photoUrl: body.photoUrl || "",
         documentsUploaded: Boolean(body.documentsUploaded || body.document),
         verified: Boolean(body.verified),
       },

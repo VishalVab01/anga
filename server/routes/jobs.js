@@ -70,7 +70,7 @@ jobsRouter.get(
   requireRole("worker"),
   asyncHandler(async (req, res) => {
     const query = { ...jobQuery(req), status: "open" };
-    const jobs = await Job.find(query).sort({ urgent: -1, createdAt: -1 }).lean();
+    const jobs = await Job.find(query).sort({ createdAt: -1, urgent: -1 }).lean();
     const applications = await Application.find({ workerId: req.user._id })
       .select("jobId status")
       .lean();

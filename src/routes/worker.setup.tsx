@@ -19,6 +19,10 @@ function WorkerSetup() {
   const navigate = useNavigate();
   const [selected, setSelected] = useState(["electrician"]);
   const [available, setAvailable] = useState(true);
+  const [photoPreview, setPhotoPreview] = useState("");
+  const [photoDataUrl, setPhotoDataUrl] = useState("");
+  const [photoName, setPhotoName] = useState("");
+  const [documentName, setDocumentName] = useState("");
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -32,6 +36,7 @@ function WorkerSetup() {
       expectedWage: data.get("wage"),
       availableToday: available,
       preferredDistance: data.get("distance"),
+      photoUrl: photoDataUrl,
       documentsUploaded: Boolean(data.get("document")),
     };
     try {
@@ -88,8 +93,8 @@ function WorkerSetup() {
         </Field>
 
         <div className="grid grid-cols-1 gap-3 min-[390px]:grid-cols-2">
-          <Field label={t("experience")}>
-            <Input name="experience" placeholder="5 years" required />
+          <Field label={lang === "hi" ? "अनुभव (वर्षों में)" : "Experience (in years)"}>
+            <Input name="experience" type="number" min="0" placeholder="5" required />
           </Field>
           <Field label={t("expectedWage")}>
             <Input name="wage" type="number" placeholder="900" required />
@@ -116,11 +121,39 @@ function WorkerSetup() {
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <Upload name="photo" icon={<Camera className="h-5 w-5" />} label={t("uploadPhoto")} />
+          <Upload
+            name="photo"
+            icon={<Camera className="h-5 w-5" />}
+            label={t("uploadPhoto")}
+            accept="image/*"
+            previewUrl={photoPreview}
+            fileName={photoName}
+            onFileSelect={async (file) => {
+              setPhotoName(file.name);
+              try {
+                const dataUrl = await fileToProfilePhotoDataUrl(file);
+                setPhotoDataUrl(dataUrl);
+                setPhotoPreview(dataUrl);
+                toast.success(
+                  lang === "hi" ? "फोटो सफलतापूर्वक अपलोड हुई" : "Photo successfully uploaded",
+                );
+              } catch {
+                setPhotoName("");
+                toast.error(lang === "hi" ? "फोटो अपलोड नहीं हुई" : "Could not upload photo");
+              }
+            }}
+          />
           <Upload
             name="document"
             icon={<FileCheck className="h-5 w-5" />}
             label={t("optionalDocument")}
+            fileName={documentName}
+            onFileSelect={(file) => {
+              setDocumentName(file.name);
+              toast.success(
+                lang === "hi" ? "दस्तावेज सफलतापूर्वक अपलोड हुआ" : "Document successfully uploaded",
+              );
+            }}
           />
         </div>
 
@@ -154,12 +187,86 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className="field" />;
 }
 
-function Upload({ name, icon, label }: { name: string; icon: ReactNode; label: string }) {
+function fileToProfilePhotoDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      const size = 320;
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      if (!context) {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Could not prepare photo"));
+        return;
+      }
+
+      canvas.width = size;
+      canvas.height = size;
+      const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
+      const sourceX = (image.naturalWidth - sourceSize) / 2;
+      const sourceY = (image.naturalHeight - sourceSize) / 2;
+      context.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, size, size);
+      URL.revokeObjectURL(objectUrl);
+      resolve(canvas.toDataURL("image/jpeg", 0.82));
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Could not read photo"));
+    };
+
+    image.src = objectUrl;
+  });
+}
+
+function Upload({
+  name,
+  icon,
+  label,
+  accept,
+  previewUrl,
+  fileName,
+  onFileSelect,
+}: {
+  name: string;
+  icon: ReactNode;
+  label: string;
+  accept?: string;
+  previewUrl?: string;
+  fileName?: string;
+  onFileSelect?: (file: File) => void | Promise<void>;
+}) {
   return (
-    <label className="card-soft flex min-h-28 flex-col items-center justify-center gap-2 p-3 text-center text-sm font-semibold">
-      {icon}
+    <label className="card-soft flex min-h-36 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden p-3 text-center text-sm font-semibold transition hover:border-primary/40">
+      {previewUrl ? (
+        <img
+          src={previewUrl}
+          alt={`${label} preview`}
+          className="h-20 w-20 rounded-2xl object-cover shadow-sm"
+        />
+      ) : (
+        <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/10 text-primary">
+          {icon}
+        </span>
+      )}
       <span>{label}</span>
-      <input name={name} type="file" className="sr-only" />
+      {fileName && (
+        <span className="max-w-full truncate rounded-full bg-primary/10 px-2 py-1 text-[11px] font-bold text-primary">
+          {fileName}
+        </span>
+      )}
+      <input
+        name={name}
+        type="file"
+        accept={accept}
+        className="sr-only"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) onFileSelect?.(file);
+        }}
+      />
     </label>
   );
 }

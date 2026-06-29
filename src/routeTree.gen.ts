@@ -31,7 +31,7 @@ import { Route as AuthOtpRouteImport } from './routes/auth.otp'
 import { Route as WorkerJobIdRouteImport } from './routes/worker.job.$id'
 import { Route as CustomerWorkerIdRouteImport } from './routes/customer.worker.$id'
 import { Route as CustomerServiceSlugRouteImport } from './routes/customer.service.$slug'
-import { Route as CustomerRequestIdApplicantsRouteImport } from './routes/customer.request.$id.applicants'
+import { Route as CustomerApplicantsIdRouteImport } from './routes/customer.applicants.$id'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -143,12 +143,11 @@ const CustomerServiceSlugRoute = CustomerServiceSlugRouteImport.update({
   path: '/customer/service/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CustomerRequestIdApplicantsRoute =
-  CustomerRequestIdApplicantsRouteImport.update({
-    id: '/$id/applicants',
-    path: '/$id/applicants',
-    getParentRoute: () => CustomerRequestRoute,
-  } as any)
+const CustomerApplicantsIdRoute = CustomerApplicantsIdRouteImport.update({
+  id: '/customer/applicants/$id',
+  path: '/customer/applicants/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -162,7 +161,7 @@ export interface FileRoutesByFullPath {
   '/customer/my-requests': typeof CustomerMyRequestsRoute
   '/customer/notifications': typeof CustomerNotificationsRoute
   '/customer/profile': typeof CustomerProfileRoute
-  '/customer/request': typeof CustomerRequestRouteWithChildren
+  '/customer/request': typeof CustomerRequestRoute
   '/customer/setup': typeof CustomerSetupRoute
   '/worker/applications': typeof WorkerApplicationsRoute
   '/worker/notifications': typeof WorkerNotificationsRoute
@@ -170,10 +169,10 @@ export interface FileRoutesByFullPath {
   '/worker/setup': typeof WorkerSetupRoute
   '/customer/': typeof CustomerIndexRoute
   '/worker/': typeof WorkerIndexRoute
+  '/customer/applicants/$id': typeof CustomerApplicantsIdRoute
   '/customer/service/$slug': typeof CustomerServiceSlugRoute
   '/customer/worker/$id': typeof CustomerWorkerIdRoute
   '/worker/job/$id': typeof WorkerJobIdRoute
-  '/customer/request/$id/applicants': typeof CustomerRequestIdApplicantsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -187,7 +186,7 @@ export interface FileRoutesByTo {
   '/customer/my-requests': typeof CustomerMyRequestsRoute
   '/customer/notifications': typeof CustomerNotificationsRoute
   '/customer/profile': typeof CustomerProfileRoute
-  '/customer/request': typeof CustomerRequestRouteWithChildren
+  '/customer/request': typeof CustomerRequestRoute
   '/customer/setup': typeof CustomerSetupRoute
   '/worker/applications': typeof WorkerApplicationsRoute
   '/worker/notifications': typeof WorkerNotificationsRoute
@@ -195,10 +194,10 @@ export interface FileRoutesByTo {
   '/worker/setup': typeof WorkerSetupRoute
   '/customer': typeof CustomerIndexRoute
   '/worker': typeof WorkerIndexRoute
+  '/customer/applicants/$id': typeof CustomerApplicantsIdRoute
   '/customer/service/$slug': typeof CustomerServiceSlugRoute
   '/customer/worker/$id': typeof CustomerWorkerIdRoute
   '/worker/job/$id': typeof WorkerJobIdRoute
-  '/customer/request/$id/applicants': typeof CustomerRequestIdApplicantsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -213,7 +212,7 @@ export interface FileRoutesById {
   '/customer/my-requests': typeof CustomerMyRequestsRoute
   '/customer/notifications': typeof CustomerNotificationsRoute
   '/customer/profile': typeof CustomerProfileRoute
-  '/customer/request': typeof CustomerRequestRouteWithChildren
+  '/customer/request': typeof CustomerRequestRoute
   '/customer/setup': typeof CustomerSetupRoute
   '/worker/applications': typeof WorkerApplicationsRoute
   '/worker/notifications': typeof WorkerNotificationsRoute
@@ -221,10 +220,10 @@ export interface FileRoutesById {
   '/worker/setup': typeof WorkerSetupRoute
   '/customer/': typeof CustomerIndexRoute
   '/worker/': typeof WorkerIndexRoute
+  '/customer/applicants/$id': typeof CustomerApplicantsIdRoute
   '/customer/service/$slug': typeof CustomerServiceSlugRoute
   '/customer/worker/$id': typeof CustomerWorkerIdRoute
   '/worker/job/$id': typeof WorkerJobIdRoute
-  '/customer/request/$id/applicants': typeof CustomerRequestIdApplicantsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -248,10 +247,10 @@ export interface FileRouteTypes {
     | '/worker/setup'
     | '/customer/'
     | '/worker/'
+    | '/customer/applicants/$id'
     | '/customer/service/$slug'
     | '/customer/worker/$id'
     | '/worker/job/$id'
-    | '/customer/request/$id/applicants'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -273,10 +272,10 @@ export interface FileRouteTypes {
     | '/worker/setup'
     | '/customer'
     | '/worker'
+    | '/customer/applicants/$id'
     | '/customer/service/$slug'
     | '/customer/worker/$id'
     | '/worker/job/$id'
-    | '/customer/request/$id/applicants'
   id:
     | '__root__'
     | '/'
@@ -298,10 +297,10 @@ export interface FileRouteTypes {
     | '/worker/setup'
     | '/customer/'
     | '/worker/'
+    | '/customer/applicants/$id'
     | '/customer/service/$slug'
     | '/customer/worker/$id'
     | '/worker/job/$id'
-    | '/customer/request/$id/applicants'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -316,7 +315,7 @@ export interface RootRouteChildren {
   CustomerMyRequestsRoute: typeof CustomerMyRequestsRoute
   CustomerNotificationsRoute: typeof CustomerNotificationsRoute
   CustomerProfileRoute: typeof CustomerProfileRoute
-  CustomerRequestRoute: typeof CustomerRequestRouteWithChildren
+  CustomerRequestRoute: typeof CustomerRequestRoute
   CustomerSetupRoute: typeof CustomerSetupRoute
   WorkerApplicationsRoute: typeof WorkerApplicationsRoute
   WorkerNotificationsRoute: typeof WorkerNotificationsRoute
@@ -324,6 +323,7 @@ export interface RootRouteChildren {
   WorkerSetupRoute: typeof WorkerSetupRoute
   CustomerIndexRoute: typeof CustomerIndexRoute
   WorkerIndexRoute: typeof WorkerIndexRoute
+  CustomerApplicantsIdRoute: typeof CustomerApplicantsIdRoute
   CustomerServiceSlugRoute: typeof CustomerServiceSlugRoute
   CustomerWorkerIdRoute: typeof CustomerWorkerIdRoute
   WorkerJobIdRoute: typeof WorkerJobIdRoute
@@ -485,27 +485,15 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomerServiceSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/customer/request/$id/applicants': {
-      id: '/customer/request/$id/applicants'
-      path: '/$id/applicants'
-      fullPath: '/customer/request/$id/applicants'
-      preLoaderRoute: typeof CustomerRequestIdApplicantsRouteImport
-      parentRoute: typeof CustomerRequestRoute
+    '/customer/applicants/$id': {
+      id: '/customer/applicants/$id'
+      path: '/customer/applicants/$id'
+      fullPath: '/customer/applicants/$id'
+      preLoaderRoute: typeof CustomerApplicantsIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface CustomerRequestRouteChildren {
-  CustomerRequestIdApplicantsRoute: typeof CustomerRequestIdApplicantsRoute
-}
-
-const CustomerRequestRouteChildren: CustomerRequestRouteChildren = {
-  CustomerRequestIdApplicantsRoute: CustomerRequestIdApplicantsRoute,
-}
-
-const CustomerRequestRouteWithChildren = CustomerRequestRoute._addFileChildren(
-  CustomerRequestRouteChildren,
-)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -519,7 +507,7 @@ const rootRouteChildren: RootRouteChildren = {
   CustomerMyRequestsRoute: CustomerMyRequestsRoute,
   CustomerNotificationsRoute: CustomerNotificationsRoute,
   CustomerProfileRoute: CustomerProfileRoute,
-  CustomerRequestRoute: CustomerRequestRouteWithChildren,
+  CustomerRequestRoute: CustomerRequestRoute,
   CustomerSetupRoute: CustomerSetupRoute,
   WorkerApplicationsRoute: WorkerApplicationsRoute,
   WorkerNotificationsRoute: WorkerNotificationsRoute,
@@ -527,6 +515,7 @@ const rootRouteChildren: RootRouteChildren = {
   WorkerSetupRoute: WorkerSetupRoute,
   CustomerIndexRoute: CustomerIndexRoute,
   WorkerIndexRoute: WorkerIndexRoute,
+  CustomerApplicantsIdRoute: CustomerApplicantsIdRoute,
   CustomerServiceSlugRoute: CustomerServiceSlugRoute,
   CustomerWorkerIdRoute: CustomerWorkerIdRoute,
   WorkerJobIdRoute: WorkerJobIdRoute,

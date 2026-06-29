@@ -58,6 +58,7 @@ export type ApiWorkerProfile = {
   availableToday: boolean;
   preferredDistance: string;
   location: string;
+  photoUrl?: string;
   documentsUploaded: boolean;
   verified: boolean;
   rating: number;
@@ -133,7 +134,7 @@ export const api = {
     request<{
       job: ApiJob;
       applicants: Array<{
-        application: { _id: string; status: string; workerId: string };
+        application: { _id: string; status: "pending" | "accepted" | "rejected"; workerId: string };
         worker: ApiWorkerProfile | null;
       }>;
     }>(`/jobs/${id}/applicants`),
