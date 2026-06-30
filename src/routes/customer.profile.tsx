@@ -28,7 +28,7 @@ function Profile() {
   const logout = () => {
     logoutLocal();
     toast.success("Logged out");
-    navigate({ to: "/" });
+    navigate({ to: "/login" });
   };
 
   return (
