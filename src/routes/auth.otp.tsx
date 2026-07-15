@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useState, type FormEvent } from "react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { PageShell } from "@/components/PageShell";
 import { api } from "@/lib/api";
 import { useT } from "@/lib/i18n";
@@ -69,13 +70,24 @@ function OtpScreen() {
 
         <label className="block">
           <span className="mb-1.5 block text-sm font-semibold">OTP</span>
-          <input
+          <InputOTP
             value={otp}
-            onChange={(event) => setOtp(event.target.value)}
-            inputMode="numeric"
+            onChange={setOtp}
             maxLength={6}
-            className="w-full rounded-2xl border border-border bg-card px-4 py-4 text-center text-3xl font-extrabold tracking-[0.5em] outline-none focus:border-primary"
-          />
+            inputMode="numeric"
+            containerClassName="grid grid-cols-6 gap-2"
+            className="w-full"
+          >
+            <InputOTPGroup className="contents">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <InputOTPSlot
+                  key={index}
+                  index={index}
+                  className="h-14 w-full rounded-2xl border border-border bg-card text-2xl font-extrabold shadow-sm transition-all first:rounded-2xl first:border last:rounded-2xl data-[active=true]:border-primary"
+                />
+              ))}
+            </InputOTPGroup>
+          </InputOTP>
         </label>
 
         <button

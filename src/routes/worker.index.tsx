@@ -1,11 +1,27 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bell, Briefcase, MapPin, Search, ShieldCheck, Star, Wallet } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import gsap from "gsap";
+import {
+  ArrowUpRight,
+  Bell,
+  BriefcaseBusiness,
+  CheckCircle2,
+  IndianRupee,
+  MapPin,
+  Mic,
+  Search,
+  ShieldCheck,
+  Star,
+  Wallet,
+} from "lucide-react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { BottomNav } from "@/components/BottomNav";
+import { LocationAutocomplete } from "@/components/LocationAutocomplete";
 import { PageShell } from "@/components/PageShell";
-import { api, type ApiJob } from "@/lib/api";
+import { ApiError, api, type ApiJob, type ApiNotification, type ApiWorkerProfile } from "@/lib/api";
 import { jobs as fallbackJobs, serviceName, services } from "@/lib/data";
 import { useT, type Lang } from "@/lib/i18n";
+import { getProfile, saveProfile } from "@/lib/session";
 
 export const Route = createFileRoute("/worker/")({
   head: () => ({ meta: [{ title: "Anga - Worker home" }] }),
@@ -27,19 +43,84 @@ type JobCardData = {
   applicationStatus?: string | null;
 };
 
+type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
+
+type SpeechRecognitionLike = {
+  lang: string;
+  interimResults: boolean;
+  onstart: (() => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  start: () => void;
+};
+
+type SpeechRecognitionEventLike = {
+  results: ArrayLike<ArrayLike<{ transcript: string }>>;
+};
+
 function WorkerHome() {
   const { t, lang } = useT();
   const [q, setQ] = useState("");
   const [apiJobs, setApiJobs] = useState<ApiJob[]>([]);
+  const [profile, setProfile] = useState<ApiWorkerProfile | null>(null);
+  const [notifications, setNotifications] = useState<ApiNotification[]>([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
+  const [listening, setListening] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  useWorkerHomeAnimations();
 
   useEffect(() => {
     api
       .nearbyJobs()
       .then((result) => setApiJobs(result.jobs))
-      .catch((err) => setError(err instanceof Error ? err.message : "Using demo jobs"))
+      .catch((err) => {
+        if (err instanceof ApiError && err.status === 401) return;
+        setError(err instanceof Error ? err.message : "Using demo jobs");
+      })
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const cachedProfile = getProfile("worker");
+    if (cachedProfile) {
+      setProfile({
+        _id: "",
+        userId: "",
+        name: String(cachedProfile.name || ""),
+        phone: String(cachedProfile.phone || ""),
+        skills: Array.isArray(cachedProfile.skills) ? cachedProfile.skills.map(String) : [],
+        experience: String(cachedProfile.experience || ""),
+        expectedWage: Number(cachedProfile.expectedWage || 0),
+        availableToday: Boolean(cachedProfile.availableToday),
+        preferredDistance: String(cachedProfile.preferredDistance || ""),
+        location: String(cachedProfile.location || cachedProfile.area || ""),
+        photoUrl: typeof cachedProfile.photoUrl === "string" ? cachedProfile.photoUrl : undefined,
+        documentsUploaded: Boolean(cachedProfile.documentsUploaded),
+        verified: Boolean(cachedProfile.verified),
+        rating: Number(cachedProfile.rating || 4.5),
+        totalJobsCompleted: Number(cachedProfile.totalJobsCompleted || 0),
+      });
+    }
+
+    api
+      .profile()
+      .then((result) => setProfile(result.profile as ApiWorkerProfile | null))
+      .catch(() => {
+        // Cached onboarding profile keeps the home screen useful during API cold starts.
+      });
+  }, []);
+
+  useEffect(() => {
+    api
+      .notifications()
+      .then((result) => setNotifications(result.notifications.slice(0, 4)))
+      .catch(() => setNotifications([]))
+      .finally(() => setNotificationsLoading(false));
   }, []);
 
   const list = useMemo(() => {
@@ -66,76 +147,276 @@ function WorkerHome() {
     const haystack = `${job.title} ${job.location} ${serviceName(job.service, lang)}`.toLowerCase();
     return haystack.includes(q.toLowerCase());
   });
+  const featuredJobs = filtered.slice(0, Math.min(3, filtered.length));
+  const otherJobs = filtered.slice(featuredJobs.length);
+  const selectedCategory = services.find(
+    (service) =>
+      q.toLowerCase() === service.en.toLowerCase() || q.toLowerCase() === service.hi.toLowerCase(),
+  );
+  const workerLocation =
+    profile?.location || (lang === "hi" ? "अपना क्षेत्र जोड़ें" : "Add your area");
+
+  const startVoiceSearch = () => {
+    if (typeof window === "undefined" || listening) return;
+    const SpeechRecognition =
+      (
+        window as unknown as {
+          SpeechRecognition?: SpeechRecognitionCtor;
+          webkitSpeechRecognition?: SpeechRecognitionCtor;
+        }
+      ).SpeechRecognition ||
+      (
+        window as unknown as {
+          SpeechRecognition?: SpeechRecognitionCtor;
+          webkitSpeechRecognition?: SpeechRecognitionCtor;
+        }
+      ).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      toast.error(
+        lang === "hi"
+          ? "इस ब्राउज़र में आवाज़ से खोज उपलब्ध नहीं है"
+          : "Voice search is not available in this browser",
+      );
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = lang === "hi" ? "hi-IN" : "en-IN";
+    recognition.interimResults = false;
+    recognition.onstart = () => {
+      setListening(true);
+      toast.message(
+        lang === "hi" ? "बोलिए, काम खोज रहे हैं..." : "Listening for your job search...",
+      );
+    };
+    recognition.onerror = () => {
+      setListening(false);
+      toast.error(lang === "hi" ? "आवाज़ समझ नहीं आई" : "Could not understand voice");
+    };
+    recognition.onend = () => setListening(false);
+    recognition.onresult = (event) => {
+      const transcript = event.results[0]?.[0]?.transcript;
+      if (!transcript) return;
+      setQ(transcript);
+      toast.success(lang === "hi" ? "आवाज़ से खोज तैयार" : "Voice search added");
+    };
+    recognition.start();
+  };
+
+  const saveWorkerLocation = async (nextLocation: string) => {
+    const trimmedLocation = nextLocation.trim();
+    if (!trimmedLocation) return;
+
+    const nextProfile = {
+      name: profile?.name || "",
+      phone: profile?.phone || "",
+      location: trimmedLocation,
+      skills: profile?.skills?.length ? profile.skills : ["electrician"],
+      experience: profile?.experience || "",
+      expectedWage: profile?.expectedWage || 0,
+      availableToday: profile?.availableToday ?? true,
+      preferredDistance: profile?.preferredDistance || "5 km",
+      photoUrl: profile?.photoUrl || "",
+      documentsUploaded: profile?.documentsUploaded ?? false,
+    };
+
+    setProfile((current) =>
+      current
+        ? { ...current, location: trimmedLocation }
+        : {
+            _id: "",
+            userId: "",
+            verified: false,
+            rating: 4.5,
+            totalJobsCompleted: 0,
+            ...nextProfile,
+          },
+    );
+    saveProfile("worker", nextProfile);
+    setLocationOpen(false);
+
+    try {
+      await api.saveWorkerProfile(nextProfile);
+      toast.success(lang === "hi" ? "लोकेशन अपडेट हो गई" : "Location updated");
+    } catch {
+      toast.message(
+        lang === "hi" ? "लोकेशन इस डिवाइस पर सेव हो गई" : "Location saved on this device",
+      );
+    }
+  };
 
   return (
     <PageShell bottomNav={<BottomNav role="worker" />}>
-      <div className="space-y-6">
-        <div>
-          <p className="text-sm text-muted-foreground">{t("greeting")}!</p>
-          <h1 className="text-2xl font-extrabold">{t("findWork")}</h1>
-        </div>
+      <div className="worker-home-screen -mx-4 -mt-4 space-y-5 overflow-visible pb-2">
+        <section className="worker-hero relative z-30 overflow-visible rounded-b-[2rem] bg-primary px-4 pb-4 pt-5 text-primary-foreground shadow-xl shadow-primary/20">
+          <div className="pointer-events-none absolute -right-12 top-5 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+          <div className="pointer-events-none absolute -left-16 bottom-4 h-36 w-36 rounded-full bg-white/10 blur-2xl" />
+
+          <div className="relative z-40 flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white text-lg font-black text-primary shadow-lg">
+                W
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-lg font-extrabold leading-tight">{t("greeting")}!</h1>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLocationOpen((open) => !open);
+                    setNotificationsOpen(false);
+                  }}
+                  className="mt-0.5 flex max-w-full items-center gap-1 text-left text-sm font-semibold text-primary-foreground/75 underline-offset-4 hover:underline"
+                >
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{workerLocation}</span>
+                </button>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setNotificationsOpen((open) => !open);
+                setLocationOpen(false);
+              }}
+              className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white/15 text-primary-foreground backdrop-blur"
+              aria-label={t("notifications")}
+            >
+              <Bell className="h-5 w-5" />
+            </button>
+
+            {notificationsOpen && (
+              <NotificationsDropdown
+                items={notifications}
+                loading={notificationsLoading}
+                lang={lang}
+                noNotifications={t("noNotifications")}
+                onClose={() => setNotificationsOpen(false)}
+              />
+            )}
+
+            {locationOpen && (
+              <LocationDropdown
+                lang={lang}
+                currentLocation={profile?.location || ""}
+                onSave={saveWorkerLocation}
+                onClose={() => setLocationOpen(false)}
+              />
+            )}
+          </div>
+
+          <div className="relative z-10 mt-4 rounded-[1.65rem] bg-white/95 p-4 text-foreground shadow-xl shadow-primary/20">
+            <p className="max-w-[13rem] text-2xl font-black leading-tight tracking-normal">
+              {lang === "hi" ? "आज का सही काम खोजें" : "Find the right work today"}
+            </p>
+            <p className="mt-1 text-sm font-medium text-muted-foreground">
+              {lang === "hi" ? "पास के भरोसेमंद रोज़गार" : "Nearby verified daily-wage jobs"}
+            </p>
+            <div className="mt-3 flex items-center gap-2 rounded-full bg-primary/10 p-1.5">
+              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-full bg-card px-3 py-3 shadow-sm">
+                <Search className="h-5 w-5 shrink-0 text-primary" />
+                <input
+                  value={q}
+                  onChange={(event) => setQ(event.target.value)}
+                  placeholder={t("search")}
+                  className="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-muted-foreground"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={startVoiceSearch}
+                className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-primary-foreground shadow-lg shadow-primary/30 transition ${
+                  listening ? "animate-pulse bg-accent" : "bg-primary"
+                }`}
+                aria-label={lang === "hi" ? "आवाज़ से खोजें" : "Search by voice"}
+              >
+                <Mic className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </section>
 
         {error && (
-          <p className="rounded-2xl bg-accent/10 p-3 text-xs font-semibold text-accent">{error}</p>
+          <p className="mx-4 rounded-2xl bg-accent/10 p-3 text-xs font-semibold text-accent">
+            {error}
+          </p>
         )}
 
-        <div className="grid grid-cols-3 gap-2">
-          <Stat label={lang === "hi" ? "आज" : "Today"} value={`${list.length}`} />
-          <Stat label={lang === "hi" ? "औसत मजदूरी" : "Avg wage"} value="₹950" />
-          <Stat label={lang === "hi" ? "पास में" : "Nearby"} value="5 km" />
-        </div>
+        <section className="worker-stats relative z-10 grid grid-cols-3 gap-2 px-4">
+          <Stat
+            icon={<BriefcaseBusiness className="h-4 w-4" />}
+            label={lang === "hi" ? "आज के काम" : "Today"}
+            value={`${list.length}`}
+            hint={lang === "hi" ? "नए मैच" : "new matches"}
+            tone="primary"
+          />
+          <Stat
+            icon={<IndianRupee className="h-4 w-4" />}
+            label={lang === "hi" ? "मजदूरी" : "Avg wage"}
+            value="₹950"
+            hint={lang === "hi" ? "दिन का औसत" : "daily avg"}
+            tone="money"
+          />
+          <Stat
+            icon={<MapPin className="h-4 w-4" />}
+            label={lang === "hi" ? "दूरी" : "Nearby"}
+            value="5 km"
+            hint={lang === "hi" ? "आपके पास" : "around you"}
+            tone="nearby"
+          />
+        </section>
 
-        <div className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-3 shadow-sm">
-          <Search className="h-5 w-5 text-muted-foreground" />
-          <input
-            value={q}
-            onChange={(event) => setQ(event.target.value)}
-            placeholder={t("search")}
-            className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground"
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
-          <QuickLink
-            to="/worker/applications"
-            icon={<Briefcase className="h-6 w-6 text-primary" />}
-            label={t("myApps")}
-          />
-          <QuickLink
-            to="/assistant"
-            icon={<Search className="h-6 w-6 text-primary" />}
-            label={t("assistant")}
-          />
-          <QuickLink
-            to="/worker/notifications"
-            icon={<Bell className="h-6 w-6 text-primary" />}
-            label={t("notifications")}
-          />
-        </div>
-
-        <div>
-          <h2 className="mb-3 text-base font-bold">{t("skills")}</h2>
-          <div className="grid grid-cols-4 gap-3">
+        <section className="worker-categories px-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-base font-extrabold">{t("skills")}</h2>
+            {q && (
+              <button
+                type="button"
+                onClick={() => setQ("")}
+                className="text-xs font-bold text-primary"
+              >
+                {lang === "hi" ? "सभी" : "All"}
+              </button>
+            )}
+          </div>
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
             {services.map((service) => {
               const Icon = service.icon;
+              const active = selectedCategory?.slug === service.slug;
               return (
                 <button
+                  type="button"
                   key={service.slug}
                   onClick={() => setQ(lang === "hi" ? service.hi : service.en)}
-                  className="card-soft card-soft-hover flex flex-col items-center gap-1.5 p-3"
+                  className={`inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-3 text-xs font-extrabold shadow-sm transition ${
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card text-foreground hover:bg-primary/10"
+                  }`}
                 >
-                  <Icon className="h-7 w-7 text-primary" strokeWidth={2} />
-                  <span className="text-center text-[11px] font-semibold leading-tight">
-                    {lang === "hi" ? service.hi : service.en}
-                  </span>
+                  <Icon className="h-4 w-4" strokeWidth={2.3} />
+                  {lang === "hi" ? service.hi : service.en}
                 </button>
               );
             })}
           </div>
-        </div>
+        </section>
 
-        <div>
-          <h2 className="mb-3 text-base font-bold">{t("nearby")}</h2>
+        <section className="worker-jobs px-4">
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-base font-extrabold">
+                {lang === "hi" ? "आपके लिए मैच" : "Job match with you"}
+              </h2>
+              <p className="text-xs font-medium text-muted-foreground">
+                {lang === "hi" ? "नए काम सबसे ऊपर" : "Newest local jobs appear first"}
+              </p>
+            </div>
+            <Link to="/worker/applications" className="text-xs font-bold text-primary">
+              {t("myApps")}
+            </Link>
+          </div>
+
           <div className="space-y-3">
             {loading && (
               <p className="rounded-2xl bg-muted p-6 text-center text-sm text-muted-foreground">
@@ -147,11 +428,21 @@ function WorkerHome() {
                 {lang === "hi" ? "काम नहीं मिला" : "No jobs found"}
               </p>
             )}
-            {filtered.map((job) => (
-              <JobCard key={job.id} job={job} lang={lang} />
-            ))}
+            {featuredJobs.length > 0 && <FeaturedJobDeck jobs={featuredJobs} lang={lang} />}
+            {otherJobs.length > 0 && (
+              <div className="pt-2">
+                <h3 className="mb-3 text-base font-extrabold">
+                  {lang === "hi" ? "और काम" : "Popular nearby"}
+                </h3>
+                <div className="space-y-3">
+                  {otherJobs.map((job) => (
+                    <JobCard key={job.id} job={job} lang={lang} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        </section>
       </div>
     </PageShell>
   );
@@ -174,20 +465,401 @@ function mapApiJob(job: ApiJob): JobCardData {
   };
 }
 
-function QuickLink({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) {
+function LocationDropdown({
+  lang,
+  currentLocation,
+  onSave,
+  onClose,
+}: {
+  lang: Lang;
+  currentLocation: string;
+  onSave: (location: string) => void | Promise<void>;
+  onClose: () => void;
+}) {
+  const [saving, setSaving] = useState(false);
+
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (saving) return;
+    const data = new FormData(event.currentTarget);
+    const location = String(data.get("worker-location") || "");
+    setSaving(true);
+    await onSave(location);
+    setSaving(false);
+  };
+
   return (
-    <Link to={to} className="card-soft flex flex-col items-center gap-1.5 p-3 text-center">
-      {icon}
-      <span className="text-xs font-semibold">{label}</span>
-    </Link>
+    <form
+      onSubmit={submit}
+      className="absolute left-0 top-14 z-50 w-[min(21rem,calc(100vw-2rem))] rounded-[1.5rem] border border-white/30 bg-card p-3 text-foreground shadow-2xl shadow-primary/25"
+    >
+      <div className="mb-3 flex items-start justify-between gap-3 px-1">
+        <div>
+          <p className="text-sm font-black">{lang === "hi" ? "लोकेशन बदलें" : "Change location"}</p>
+          <p className="text-[11px] font-semibold text-muted-foreground">
+            {lang === "hi" ? "पास के काम इसी क्षेत्र से मिलेंगे" : "Nearby jobs use this area"}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-full bg-muted px-3 py-1 text-xs font-bold text-muted-foreground"
+        >
+          {lang === "hi" ? "बंद" : "Close"}
+        </button>
+      </div>
+
+      <LocationAutocomplete
+        key={currentLocation}
+        name="worker-location"
+        defaultValue={currentLocation}
+        placeholder={lang === "hi" ? "अपना क्षेत्र खोजें" : "Search your area"}
+        required
+      />
+
+      <button
+        type="submit"
+        disabled={saving}
+        className="btn-primary mt-3 w-full disabled:opacity-60"
+      >
+        {saving
+          ? lang === "hi"
+            ? "सेव हो रहा है..."
+            : "Saving..."
+          : lang === "hi"
+            ? "लोकेशन सेव करें"
+            : "Save location"}
+      </button>
+    </form>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function NotificationsDropdown({
+  items,
+  loading,
+  lang,
+  noNotifications,
+  onClose,
+}: {
+  items: ApiNotification[];
+  loading: boolean;
+  lang: Lang;
+  noNotifications: string;
+  onClose: () => void;
+}) {
   return (
-    <div className="card-soft p-3 text-center">
-      <div className="text-lg font-extrabold text-primary">{value}</div>
-      <div className="text-[11px] font-semibold text-muted-foreground">{label}</div>
+    <div className="absolute right-0 top-14 z-30 w-[min(20rem,calc(100vw-2rem))] rounded-[1.5rem] border border-white/30 bg-card p-3 text-foreground shadow-2xl shadow-primary/25">
+      <div className="mb-2 flex items-center justify-between gap-3 px-1">
+        <div>
+          <p className="text-sm font-black">{lang === "hi" ? "सूचनाएं" : "Notifications"}</p>
+          <p className="text-[11px] font-semibold text-muted-foreground">
+            {lang === "hi" ? "नए काम और अपडेट" : "Jobs and updates"}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-full bg-muted px-3 py-1 text-xs font-bold text-muted-foreground"
+        >
+          {lang === "hi" ? "बंद" : "Close"}
+        </button>
+      </div>
+
+      <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+        {loading && (
+          <p className="rounded-2xl bg-muted p-4 text-center text-xs font-semibold text-muted-foreground">
+            {lang === "hi" ? "लोड हो रहा है..." : "Loading notifications..."}
+          </p>
+        )}
+        {!loading && items.length === 0 && (
+          <p className="rounded-2xl bg-muted p-4 text-center text-xs font-semibold text-muted-foreground">
+            {noNotifications}
+          </p>
+        )}
+        {items.map((item) => {
+          const Icon = item.type === "assigned" ? CheckCircle2 : Bell;
+          return (
+            <div key={item._id} className="rounded-2xl bg-muted/70 p-3">
+              <div className="flex items-start gap-2.5">
+                <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="line-clamp-1 text-sm font-extrabold">{item.title}</p>
+                    {!item.read && (
+                      <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                    )}
+                  </div>
+                  <p className="mt-0.5 line-clamp-2 text-xs font-medium text-muted-foreground">
+                    {item.message}
+                  </p>
+                  <p className="mt-1 text-[10px] font-bold text-muted-foreground/80">
+                    {new Date(item.createdAt).toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN")}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Stat({
+  icon,
+  label,
+  value,
+  hint,
+  tone,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  hint: string;
+  tone: "primary" | "money" | "nearby";
+}) {
+  const toneClass = {
+    primary: "from-primary/16 via-card to-card text-primary",
+    money: "from-emerald-500/14 via-card to-card text-emerald-600",
+    nearby: "from-sky-500/14 via-card to-card text-sky-600",
+  }[tone];
+  const iconToneClass = {
+    primary: "text-primary",
+    money: "text-emerald-600",
+    nearby: "text-sky-600",
+  }[tone];
+
+  return (
+    <div className="group relative min-w-0 overflow-hidden rounded-[1.35rem] border border-white/70 bg-card p-2.5 shadow-[0_12px_28px_rgba(37,99,235,0.12)] ring-1 ring-primary/5 transition hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(37,99,235,0.16)]">
+      <div className={`absolute inset-0 bg-gradient-to-br ${toneClass} opacity-95`} />
+      <div className="pointer-events-none absolute -right-5 -top-7 h-16 w-16 rounded-full bg-white/80 blur-xl" />
+      <div className="relative z-10">
+        <div className="mb-2 flex items-center justify-between gap-1.5">
+          <span
+            className={`grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white shadow-sm ${iconToneClass}`}
+          >
+            {icon}
+          </span>
+          <span className="truncate text-[10px] font-black uppercase tracking-wide text-muted-foreground">
+            {label}
+          </span>
+        </div>
+        <div className="truncate text-xl font-black leading-none tracking-normal text-foreground">
+          {value}
+        </div>
+        <div className="mt-1 truncate text-[10px] font-bold text-muted-foreground">{hint}</div>
+      </div>
+    </div>
+  );
+}
+
+function FeaturedJobDeck({ jobs, lang }: { jobs: JobCardData[]; lang: Lang }) {
+  const navigate = useNavigate();
+  const jobSignature = jobs.map((job) => job.id).join("|");
+  const [dismissedIds, setDismissedIds] = useState<string[]>([]);
+  const [dragStart, setDragStart] = useState<number | null>(null);
+  const [dragX, setDragX] = useState(0);
+  const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
+
+  useEffect(() => {
+    setDismissedIds([]);
+    setDragStart(null);
+    setDragX(0);
+    setExitDirection(null);
+  }, [jobSignature]);
+
+  const visibleJobs = jobs.filter((job) => !dismissedIds.includes(job.id));
+  const deckJobs = visibleJobs.slice(0, 3);
+  const topJob = deckJobs[0];
+
+  const openJob = (job: JobCardData) => {
+    setExitDirection("right");
+    window.setTimeout(() => {
+      navigate({ to: "/worker/job/$id", params: { id: job.id } });
+    }, 150);
+  };
+
+  const dismissJob = (job: JobCardData) => {
+    setExitDirection("left");
+    window.setTimeout(() => {
+      setDismissedIds((ids) => [...ids, job.id]);
+      setDragX(0);
+      setExitDirection(null);
+    }, 180);
+  };
+
+  const handlePointerUp = () => {
+    if (dragStart === null) return;
+    if (!topJob) {
+      setDragStart(null);
+      setDragX(0);
+      return;
+    }
+    const delta = dragX;
+    setDragStart(null);
+    if (delta > 96) {
+      openJob(topJob);
+      return;
+    }
+    if (delta < -96) {
+      dismissJob(topJob);
+      return;
+    }
+    setDragX(0);
+  };
+
+  return (
+    <div
+      className="relative h-[18.4rem] touch-pan-y select-none overflow-visible"
+      onPointerDown={(event) => {
+        if (!topJob || exitDirection) return;
+        setDragStart(event.clientX);
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }}
+      onPointerMove={(event) => {
+        if (dragStart === null || exitDirection) return;
+        setDragX(event.clientX - dragStart);
+      }}
+      onPointerCancel={() => {
+        setDragStart(null);
+        setDragX(0);
+      }}
+      onPointerUp={handlePointerUp}
+    >
+      {visibleJobs.length === 0 && (
+        <div className="grid h-full place-items-center rounded-[1.75rem] border border-dashed border-primary/30 bg-card text-center text-sm font-semibold text-muted-foreground">
+          {lang === "hi" ? "आज के मैच देख लिए" : "You have reviewed today's matches"}
+        </div>
+      )}
+
+      {deckJobs.map((job, index) => (
+        <FeaturedJobCard
+          key={job.id}
+          job={job}
+          lang={lang}
+          position={index}
+          visible
+          dragX={index === 0 ? dragX : 0}
+          dragging={index === 0 && dragStart !== null}
+          exitDirection={index === 0 ? exitDirection : null}
+          onOpen={() => openJob(job)}
+        />
+      ))}
+
+      {visibleJobs.length > 1 && (
+        <div className="absolute bottom-1 left-1/2 z-30 flex -translate-x-1/2 gap-1.5 rounded-full bg-background/80 px-2 py-1 shadow-sm">
+          {visibleJobs.slice(0, 3).map((job, index) => (
+            <span
+              key={job.id}
+              className={`h-1.5 rounded-full transition-all ${
+                index === 0 ? "w-5 bg-primary" : "w-1.5 bg-primary/25"
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FeaturedJobCard({
+  job,
+  lang,
+  position = 0,
+  visible = true,
+  dragX = 0,
+  dragging = false,
+  exitDirection = null,
+  onOpen,
+}: {
+  job: JobCardData;
+  lang: Lang;
+  position?: number;
+  visible?: boolean;
+  dragX?: number;
+  dragging?: boolean;
+  exitDirection?: "left" | "right" | null;
+  onOpen?: () => void;
+}) {
+  const service = services.find((item) => item.slug === job.service);
+  const applicants = Math.max(8, Math.round(job.payment / 80));
+  const isTop = position === 0;
+  const exitX = exitDirection === "right" ? 460 : exitDirection === "left" ? -460 : 0;
+  const translateX = isTop ? dragX + exitX : 0;
+  const rotate = isTop ? Math.max(-14, Math.min(14, translateX / 16)) : 0;
+  const baseY = position * 12;
+  const baseScale = 1 - position * 0.045;
+  const swipeIntent = isTop && Math.abs(dragX) > 40;
+  return (
+    <div
+      className={`featured-job-card group absolute inset-x-0 top-0 cursor-grab overflow-hidden rounded-[1.75rem] bg-primary p-3.5 text-primary-foreground shadow-xl shadow-primary/20 ${
+        visible ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+      } ${dragging ? "cursor-grabbing" : ""}`}
+      style={{
+        zIndex: 20 - position,
+        transform: `translateX(${translateX}px) translateY(${baseY}px) rotate(${rotate}deg) scale(${baseScale})`,
+        transition: dragging ? "none" : "transform 220ms ease, opacity 220ms ease",
+      }}
+      aria-hidden={!visible}
+    >
+      {swipeIntent && (
+        <div
+          className={`pointer-events-none absolute left-4 top-4 z-20 rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide ${
+            dragX > 0 ? "bg-white text-primary" : "bg-foreground text-background"
+          }`}
+        >
+          {dragX > 0 ? "Open" : "Skip"}
+        </div>
+      )}
+      <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-white/15 blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-16 left-4 h-36 w-36 rounded-full bg-white/10 blur-2xl" />
+      <div className="relative z-10 flex items-start justify-between gap-3">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white text-primary shadow-lg">
+          {service && <service.icon className="h-5 w-5" strokeWidth={2.3} />}
+        </div>
+        <span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-extrabold capitalize">
+          {job.applicationStatus === "pending" ? "Applied" : job.status}
+        </span>
+      </div>
+      <div className="relative z-10 mt-3">
+        <p className="text-sm font-bold text-primary-foreground/70">
+          {serviceName(job.service, lang)}
+        </p>
+        <h3 className="mt-1 max-w-[15rem] text-xl font-black leading-tight tracking-normal">
+          {job.title}
+        </h3>
+        <p className="mt-1.5 flex items-center gap-1 text-sm font-medium text-primary-foreground/75">
+          <MapPin className="h-4 w-4" /> {job.location} · {job.distanceKm} km
+        </p>
+      </div>
+      <div className="relative z-10 mt-3 flex flex-wrap gap-2">
+        <span className="rounded-full bg-white/15 px-3 py-2 text-xs font-extrabold">
+          ₹{job.payment}
+        </span>
+        <span className="rounded-full bg-white/15 px-3 py-2 text-xs font-bold">{job.time}</span>
+        <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-2 text-xs font-bold">
+          <Star className="h-3 w-3 fill-current text-amber-300" /> {job.rating}
+        </span>
+      </div>
+      <div className="relative z-10 mt-3 flex items-center justify-between gap-3">
+        <span className="rounded-full bg-white px-4 py-2 text-xs font-extrabold text-foreground shadow-lg">
+          {applicants}+ {lang === "hi" ? "वर्कर पास में" : "workers nearby"}
+        </span>
+        <button
+          type="button"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (isTop && onOpen) onOpen();
+          }}
+          className="grid h-10 w-10 place-items-center rounded-full bg-foreground text-background shadow-lg transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+          aria-label={lang === "hi" ? "काम खोलें" : "Open job"}
+        >
+          <ArrowUpRight className="h-5 w-5" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -205,10 +877,10 @@ function JobCard({ job, lang }: { job: JobCardData; lang: Lang }) {
     <Link
       to="/worker/job/$id"
       params={{ id: job.id }}
-      className="card-soft card-soft-hover block p-4"
+      className="card-soft card-soft-hover block overflow-hidden rounded-[1.45rem] p-4"
     >
       <div className="flex items-start gap-3">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10">
+        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 shadow-sm">
           {service && <service.icon className="h-6 w-6 text-primary" strokeWidth={2} />}
         </div>
         <div className="min-w-0 flex-1">
@@ -224,13 +896,13 @@ function JobCard({ job, lang }: { job: JobCardData; lang: Lang }) {
             <MapPin className="h-3 w-3" /> {job.location} · {job.distanceKm} km
           </p>
           <div className="mt-3 grid grid-cols-[0.9fr_1.45fr_0.8fr] gap-2 text-xs">
-            <span className="flex min-h-11 min-w-0 items-center justify-center rounded-xl bg-primary/10 px-2 py-1.5 text-center font-bold leading-tight text-primary">
+            <span className="flex min-h-11 min-w-0 items-center justify-center rounded-2xl bg-primary/10 px-2 py-1.5 text-center font-bold leading-tight text-primary">
               ₹{job.payment}
             </span>
-            <span className="flex min-h-11 min-w-0 items-center justify-center rounded-xl bg-muted px-2 py-1.5 text-center font-semibold leading-tight">
+            <span className="flex min-h-11 min-w-0 items-center justify-center rounded-2xl bg-muted px-2 py-1.5 text-center font-semibold leading-tight">
               <span className="line-clamp-2">{job.time}</span>
             </span>
-            <span className="flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-xl bg-muted px-2 py-1.5 text-center font-semibold leading-tight">
+            <span className="flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-2xl bg-muted px-2 py-1.5 text-center font-semibold leading-tight">
               <Star className="h-3 w-3 shrink-0 fill-current text-amber-500" /> {job.rating}
             </span>
           </div>
@@ -256,4 +928,35 @@ function TrustPill({ icon, text }: { icon: React.ReactNode; text: string }) {
       {text}
     </span>
   );
+}
+
+function useWorkerHomeAnimations() {
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) return;
+
+    const context = gsap.context(() => {
+      gsap.fromTo(
+        [
+          ".worker-hero",
+          ".worker-stats > *",
+          ".worker-categories",
+          ".featured-job-card",
+          ".worker-jobs .card-soft",
+        ],
+        { autoAlpha: 0, y: 22, scale: 0.98 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.58,
+          stagger: 0.055,
+          ease: "power3.out",
+        },
+      );
+    });
+
+    return () => context.revert();
+  }, []);
 }
