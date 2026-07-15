@@ -170,9 +170,9 @@ function Landing() {
                 <Sparkles className="h-5 w-5" />
                 Try Demo
               </button>
-              <a href="/app" className="btn-outline bg-card/80 text-base">
+              {/* <a href="/app" className="btn-outline bg-card/80 text-base">
                 Download App
-              </a>
+              </a> */}
             </div>
 
             <div className="demo-credentials mt-5 max-w-xl rounded-[1.5rem] border border-primary/15 bg-card/90 p-4 shadow-lg shadow-primary/5">

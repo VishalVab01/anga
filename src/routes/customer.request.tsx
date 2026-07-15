@@ -24,7 +24,10 @@ function NewRequest() {
     try {
       const nextDraft = JSON.parse(raw) as AssistantDraft;
       setDraft(nextDraft);
-      if (services.some((item) => item.slug === nextDraft.service)) {
+      if (
+        nextDraft.service &&
+        services.some((item) => item.slug === nextDraft.service)
+      ) {
         setService(nextDraft.service);
       }
       sessionStorage.removeItem("anga.assistantDraft");
