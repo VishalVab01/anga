@@ -33,13 +33,13 @@ export type ApiJob = {
   status: "open" | "assigned" | "completed" | "cancelled";
   assignedWorkerId?: string | null;
   applicants: string[];
-  applicationStatus?: "pending" | "accepted" | "rejected" | null;
+  applicationStatus?: "pending" | "accepted" | "rejected" | "completed" | null;
   createdAt: string;
 };
 
 export type ApiApplication = {
   _id: string;
-  status: "pending" | "accepted" | "rejected";
+  status: "pending" | "accepted" | "rejected" | "completed";
   jobId: ApiJob;
   workerId: string;
   customerId: string;
@@ -142,12 +142,19 @@ export const api = {
   job: (id: string) => request<{ job: ApiJob }>(`/jobs/${id}`),
   createJob: (body: unknown) =>
     request<{ job: ApiJob }>("/jobs", { method: "POST", body: JSON.stringify(body) }),
+  updateJob: (id: string, body: unknown) =>
+    request<{ job: ApiJob }>(`/jobs/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  cancelJob: (id: string) => request<{ job: ApiJob }>(`/jobs/${id}`, { method: "DELETE" }),
   apply: (id: string) => request<{ application: unknown }>(`/jobs/${id}/apply`, { method: "POST" }),
   applicants: (id: string) =>
     request<{
       job: ApiJob;
       applicants: Array<{
-        application: { _id: string; status: "pending" | "accepted" | "rejected"; workerId: string };
+        application: {
+          _id: string;
+          status: "pending" | "accepted" | "rejected" | "completed";
+          workerId: string;
+        };
         worker: ApiWorkerProfile | null;
       }>;
     }>(`/jobs/${id}/applicants`),
@@ -156,5 +163,9 @@ export const api = {
   complete: (id: string) => request(`/jobs/${id}/complete`, { method: "POST" }),
   myApplications: () => request<{ applications: ApiApplication[] }>("/applications/my"),
   notifications: () => request<{ notifications: ApiNotification[] }>("/notifications"),
+  markNotificationRead: (id: string) =>
+    request<{ notification: ApiNotification }>(`/notifications/${id}/read`, { method: "PATCH" }),
+  markNotificationsRead: () =>
+    request<{ message: string }>("/notifications/read-all", { method: "PATCH" }),
   workers: (params = "") => request<{ workers: ApiWorkerProfile[] }>(`/workers${params}`),
 };

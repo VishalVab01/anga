@@ -225,6 +225,19 @@ jobsRouter.post(
       { new: true },
     );
     if (!job) return res.status(404).json({ message: "Job not found or not yours" });
+    const application = await Application.findOneAndUpdate(
+      { jobId: job._id, status: "accepted" },
+      { status: "completed" },
+      { new: true },
+    );
+    if (application) {
+      await Notification.create({
+        userId: application.workerId,
+        title: "Job completed",
+        message: `${job.title} was marked completed. Ask the customer for rating if needed.`,
+        type: "completed",
+      });
+    }
     res.json({ job });
   }),
 );

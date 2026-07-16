@@ -13,7 +13,7 @@ import {
   Star,
   Wallet,
 } from "lucide-react";
-import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { BottomNav } from "@/components/BottomNav";
 import { LocationAutocomplete } from "@/components/LocationAutocomplete";
@@ -345,7 +345,7 @@ function WorkerHome() {
           </p>
         )}
 
-        <section className="worker-stats relative z-10 grid grid-cols-3 gap-2 px-4">
+        <section className="worker-stats relative z-10 grid grid-cols-3 gap-2.5 px-4">
           <Stat
             icon={<BriefcaseBusiness className="h-4 w-4" />}
             label={lang === "hi" ? "आज के काम" : "Today"}
@@ -635,24 +635,28 @@ function Stat({
   }[tone];
 
   return (
-    <div className="group relative min-w-0 overflow-hidden rounded-[1.35rem] border border-white/70 bg-card p-2.5 shadow-[0_12px_28px_rgba(37,99,235,0.12)] ring-1 ring-primary/5 transition hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(37,99,235,0.16)]">
-      <div className={`absolute inset-0 bg-gradient-to-br ${toneClass} opacity-95`} />
-      <div className="pointer-events-none absolute -right-5 -top-7 h-16 w-16 rounded-full bg-white/80 blur-xl" />
-      <div className="relative z-10">
-        <div className="mb-2 flex items-center justify-between gap-1.5">
+    <div className="group relative min-w-0 overflow-hidden rounded-[1.2rem] border border-primary/10 bg-card px-2.5 py-2.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] ring-1 ring-white/80 transition hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(37,99,235,0.14)]">
+      <div className={`absolute inset-0 bg-gradient-to-br ${toneClass} opacity-90`} />
+      <div className="pointer-events-none absolute -right-4 -top-8 h-14 w-14 rounded-full bg-white/80 blur-xl" />
+      <div className="relative z-10 flex min-h-[5.6rem] flex-col justify-between">
+        <div className="flex items-center gap-1.5">
           <span
-            className={`grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white shadow-sm ${iconToneClass}`}
+            className={`grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white shadow-sm ring-1 ring-primary/5 ${iconToneClass}`}
           >
             {icon}
           </span>
-          <span className="truncate text-[10px] font-black uppercase tracking-wide text-muted-foreground">
+          <span className="min-w-0 break-words text-[0.62rem] font-black uppercase leading-tight text-muted-foreground">
             {label}
           </span>
         </div>
-        <div className="truncate text-xl font-black leading-none tracking-normal text-foreground">
-          {value}
+        <div>
+          <div className="truncate text-[1.45rem] font-black leading-none tracking-normal text-foreground">
+            {value}
+          </div>
+          <div className="mt-1 truncate text-[0.68rem] font-extrabold leading-tight text-muted-foreground">
+            {hint}
+          </div>
         </div>
-        <div className="mt-1 truncate text-[10px] font-bold text-muted-foreground">{hint}</div>
       </div>
     </div>
   );
@@ -661,103 +665,105 @@ function Stat({
 function FeaturedJobDeck({ jobs, lang }: { jobs: JobCardData[]; lang: Lang }) {
   const navigate = useNavigate();
   const jobSignature = jobs.map((job) => job.id).join("|");
-  const [dismissedIds, setDismissedIds] = useState<string[]>([]);
-  const [dragStart, setDragStart] = useState<number | null>(null);
-  const [dragX, setDragX] = useState(0);
-  const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const dragStartXRef = useRef(0);
+  const isDraggingRef = useRef(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [cardStep, setCardStep] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
-    setDismissedIds([]);
-    setDragStart(null);
-    setDragX(0);
-    setExitDirection(null);
+    setActiveIndex(0);
+    setDragOffset(0);
   }, [jobSignature]);
 
-  const visibleJobs = jobs.filter((job) => !dismissedIds.includes(job.id));
-  const deckJobs = visibleJobs.slice(0, 3);
-  const topJob = deckJobs[0];
+  const deckJobs = jobs.slice(0, 5);
+  const cardGap = 14;
+  const cardRatio = 0.84;
+
+  useEffect(() => {
+    const measureCardStep = () => {
+      const container = containerRef.current;
+      if (!container) return;
+      setCardStep(container.clientWidth * cardRatio + cardGap);
+    };
+
+    measureCardStep();
+    window.addEventListener("resize", measureCardStep);
+    return () => window.removeEventListener("resize", measureCardStep);
+  }, []);
 
   const openJob = (job: JobCardData) => {
-    setExitDirection("right");
-    window.setTimeout(() => {
-      navigate({ to: "/worker/job/$id", params: { id: job.id } });
-    }, 150);
+    navigate({ to: "/worker/job/$id", params: { id: job.id } });
   };
 
-  const dismissJob = (job: JobCardData) => {
-    setExitDirection("left");
-    window.setTimeout(() => {
-      setDismissedIds((ids) => [...ids, job.id]);
-      setDragX(0);
-      setExitDirection(null);
-    }, 180);
-  };
+  const stopDragging = () => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    setIsDragging(false);
 
-  const handlePointerUp = () => {
-    if (dragStart === null) return;
-    if (!topJob) {
-      setDragStart(null);
-      setDragX(0);
-      return;
+    const threshold = Math.max(56, cardStep * 0.18);
+    if (dragOffset < -threshold) {
+      setActiveIndex((index) => Math.min(deckJobs.length - 1, index + 1));
+    } else if (dragOffset > threshold) {
+      setActiveIndex((index) => Math.max(0, index - 1));
     }
-    const delta = dragX;
-    setDragStart(null);
-    if (delta > 96) {
-      openJob(topJob);
-      return;
-    }
-    if (delta < -96) {
-      dismissJob(topJob);
-      return;
-    }
-    setDragX(0);
+    setDragOffset(0);
   };
 
   return (
-    <div
-      className="relative h-[18.4rem] touch-pan-y select-none overflow-visible"
-      onPointerDown={(event) => {
-        if (!topJob || exitDirection) return;
-        setDragStart(event.clientX);
-        event.currentTarget.setPointerCapture(event.pointerId);
-      }}
-      onPointerMove={(event) => {
-        if (dragStart === null || exitDirection) return;
-        setDragX(event.clientX - dragStart);
-      }}
-      onPointerCancel={() => {
-        setDragStart(null);
-        setDragX(0);
-      }}
-      onPointerUp={handlePointerUp}
-    >
-      {visibleJobs.length === 0 && (
-        <div className="grid h-full place-items-center rounded-[1.75rem] border border-dashed border-primary/30 bg-card text-center text-sm font-semibold text-muted-foreground">
+    <div className="relative select-none">
+      {deckJobs.length === 0 && (
+        <div className="grid min-h-[15rem] place-items-center rounded-[1.75rem] border border-dashed border-primary/30 bg-card text-center text-sm font-semibold text-muted-foreground">
           {lang === "hi" ? "आज के मैच देख लिए" : "You have reviewed today's matches"}
         </div>
       )}
 
-      {deckJobs.map((job, index) => (
-        <FeaturedJobCard
-          key={job.id}
-          job={job}
-          lang={lang}
-          position={index}
-          visible
-          dragX={index === 0 ? dragX : 0}
-          dragging={index === 0 && dragStart !== null}
-          exitDirection={index === 0 ? exitDirection : null}
-          onOpen={() => openJob(job)}
-        />
-      ))}
+      {deckJobs.length > 0 && (
+        <div
+          ref={containerRef}
+          className="-mx-1 overflow-hidden px-1 pb-2"
+          onPointerDown={(event) => {
+            isDraggingRef.current = true;
+            setIsDragging(true);
+            dragStartXRef.current = event.clientX;
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }}
+          onPointerMove={(event) => {
+            if (!isDraggingRef.current) return;
+            const delta = event.clientX - dragStartXRef.current;
+            setDragOffset(delta);
+          }}
+          onPointerUp={stopDragging}
+          onPointerCancel={stopDragging}
+          onPointerLeave={stopDragging}
+        >
+          <div
+            ref={trackRef}
+            className="flex cursor-grab touch-pan-y gap-3.5 active:cursor-grabbing"
+            style={{
+              transform: `translate3d(${-(activeIndex * cardStep) + dragOffset}px, 0, 0)`,
+              transition: isDragging ? "none" : "transform 420ms cubic-bezier(0.16, 1, 0.3, 1)",
+            }}
+          >
+            {deckJobs.map((job) => (
+              <div key={job.id} className="min-w-0 flex-[0_0_84%]">
+                <FeaturedJobCard job={job} lang={lang} onOpen={() => openJob(job)} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-      {visibleJobs.length > 1 && (
-        <div className="absolute bottom-1 left-1/2 z-30 flex -translate-x-1/2 gap-1.5 rounded-full bg-background/80 px-2 py-1 shadow-sm">
-          {visibleJobs.slice(0, 3).map((job, index) => (
+      {deckJobs.length > 1 && (
+        <div className="mt-2 flex justify-center gap-1.5 rounded-full">
+          {deckJobs.map((job, index) => (
             <span
               key={job.id}
               className={`h-1.5 rounded-full transition-all ${
-                index === 0 ? "w-5 bg-primary" : "w-1.5 bg-primary/25"
+                index === activeIndex ? "w-5 bg-primary" : "w-1.5 bg-primary/25"
               }`}
             />
           ))}
@@ -770,94 +776,69 @@ function FeaturedJobDeck({ jobs, lang }: { jobs: JobCardData[]; lang: Lang }) {
 function FeaturedJobCard({
   job,
   lang,
-  position = 0,
-  visible = true,
-  dragX = 0,
-  dragging = false,
-  exitDirection = null,
   onOpen,
 }: {
   job: JobCardData;
   lang: Lang;
-  position?: number;
-  visible?: boolean;
-  dragX?: number;
-  dragging?: boolean;
-  exitDirection?: "left" | "right" | null;
   onOpen?: () => void;
 }) {
   const service = services.find((item) => item.slug === job.service);
   const applicants = Math.max(8, Math.round(job.payment / 80));
-  const isTop = position === 0;
-  const exitX = exitDirection === "right" ? 460 : exitDirection === "left" ? -460 : 0;
-  const translateX = isTop ? dragX + exitX : 0;
-  const rotate = isTop ? Math.max(-14, Math.min(14, translateX / 16)) : 0;
-  const baseY = position * 12;
-  const baseScale = 1 - position * 0.045;
-  const swipeIntent = isTop && Math.abs(dragX) > 40;
   return (
-    <div
-      className={`featured-job-card group absolute inset-x-0 top-0 cursor-grab overflow-hidden rounded-[1.75rem] bg-primary p-3.5 text-primary-foreground shadow-xl shadow-primary/20 ${
-        visible ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
-      } ${dragging ? "cursor-grabbing" : ""}`}
-      style={{
-        zIndex: 20 - position,
-        transform: `translateX(${translateX}px) translateY(${baseY}px) rotate(${rotate}deg) scale(${baseScale})`,
-        transition: dragging ? "none" : "transform 220ms ease, opacity 220ms ease",
-      }}
-      aria-hidden={!visible}
-    >
-      {swipeIntent && (
-        <div
-          className={`pointer-events-none absolute left-4 top-4 z-20 rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide ${
-            dragX > 0 ? "bg-white text-primary" : "bg-foreground text-background"
-          }`}
-        >
-          {dragX > 0 ? "Open" : "Skip"}
-        </div>
-      )}
+    <div className="featured-job-card group relative flex h-[14rem] flex-col overflow-hidden rounded-[1.55rem] bg-primary p-3 text-primary-foreground shadow-xl shadow-primary/20 transition-[box-shadow,transform] duration-300 ease-out">
       <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-white/15 blur-2xl" />
       <div className="pointer-events-none absolute -bottom-16 left-4 h-36 w-36 rounded-full bg-white/10 blur-2xl" />
-      <div className="relative z-10 flex items-start justify-between gap-3">
-        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white text-primary shadow-lg">
+      <div className="relative z-10 flex items-start justify-between gap-2">
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-white text-primary shadow-lg">
           {service && <service.icon className="h-5 w-5" strokeWidth={2.3} />}
         </div>
-        <span className="rounded-full bg-white/15 px-3 py-1 text-[11px] font-extrabold capitalize">
+        <span className="max-w-[6.5rem] truncate rounded-full bg-white/15 px-3 py-1 text-[11px] font-extrabold capitalize">
           {job.applicationStatus === "pending" ? "Applied" : job.status}
         </span>
       </div>
-      <div className="relative z-10 mt-3">
-        <p className="text-sm font-bold text-primary-foreground/70">
+      <div className="relative z-10 mt-2 min-h-[5.1rem] min-w-0">
+        <p className="truncate text-xs font-bold text-primary-foreground/70">
           {serviceName(job.service, lang)}
         </p>
-        <h3 className="mt-1 max-w-[15rem] text-xl font-black leading-tight tracking-normal">
+        <h3 className="mt-0.5 line-clamp-2 text-[1.05rem] font-black leading-tight tracking-normal">
           {job.title}
         </h3>
-        <p className="mt-1.5 flex items-center gap-1 text-sm font-medium text-primary-foreground/75">
-          <MapPin className="h-4 w-4" /> {job.location} · {job.distanceKm} km
+        <p className="mt-1 flex min-w-0 items-center gap-1 text-xs font-medium text-primary-foreground/75">
+          <MapPin className="h-3.5 w-3.5 shrink-0" />
+          <span className="min-w-0 truncate">
+            {job.location} · {job.distanceKm} km
+          </span>
         </p>
       </div>
-      <div className="relative z-10 mt-3 flex flex-wrap gap-2">
-        <span className="rounded-full bg-white/15 px-3 py-2 text-xs font-extrabold">
+      <div className="relative z-10 mt-auto grid grid-cols-[auto_minmax(0,1fr)_auto] gap-1.5">
+        <span className="truncate rounded-full bg-white/15 px-2.5 py-1.5 text-xs font-extrabold">
           ₹{job.payment}
         </span>
-        <span className="rounded-full bg-white/15 px-3 py-2 text-xs font-bold">{job.time}</span>
-        <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-2 text-xs font-bold">
+        <span className="min-w-0 truncate rounded-full bg-white/15 px-2.5 py-1.5 text-center text-xs font-bold">
+          {job.time}
+        </span>
+        <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1.5 text-xs font-bold">
           <Star className="h-3 w-3 fill-current text-amber-300" /> {job.rating}
         </span>
       </div>
-      <div className="relative z-10 mt-3 flex items-center justify-between gap-3">
-        <span className="rounded-full bg-white px-4 py-2 text-xs font-extrabold text-foreground shadow-lg">
+      <div className="relative z-10 mt-2 flex min-w-0 items-center justify-between gap-2">
+        <span className="min-w-0 truncate rounded-full bg-white px-3 py-1.5 text-xs font-extrabold text-foreground shadow-lg">
           {applicants}+ {lang === "hi" ? "वर्कर पास में" : "workers nearby"}
         </span>
         <button
           type="button"
+          onPointerDown={(event) => {
+            event.stopPropagation();
+          }}
+          onPointerUp={(event) => {
+            event.stopPropagation();
+          }}
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
-            if (isTop && onOpen) onOpen();
+            onOpen?.();
           }}
-          className="grid h-10 w-10 place-items-center rounded-full bg-foreground text-background shadow-lg transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-foreground text-background shadow-lg transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
           aria-label={lang === "hi" ? "काम खोलें" : "Open job"}
         >
           <ArrowUpRight className="h-5 w-5" />

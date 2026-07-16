@@ -81,6 +81,19 @@ function Applicants() {
             workerId={item.workerId}
             status={item.status}
             worker={item.worker}
+            onAssigned={() =>
+              setApplicants((current) =>
+                current.map((applicant) => ({
+                  ...applicant,
+                  status:
+                    applicant.workerId === item.workerId
+                      ? "accepted"
+                      : applicant.status === "pending"
+                        ? "rejected"
+                        : applicant.status,
+                })),
+              )
+            }
           />
         ))}
       </div>
@@ -93,19 +106,28 @@ function ApplicantCard({
   workerId,
   status,
   worker,
+  onAssigned,
 }: {
   jobId: string;
   workerId: string;
   status: string;
   worker: ApiWorkerProfile;
+  onAssigned: () => void;
 }) {
   const { t, lang } = useT();
+  const [assigning, setAssigning] = useState(false);
+  const canAssign = status === "pending";
   const assign = async () => {
+    if (!canAssign || assigning) return;
+    setAssigning(true);
     try {
       await api.assign(jobId, workerId);
       toast.success(`${worker.name} assigned`);
+      onAssigned();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not assign worker");
+    } finally {
+      setAssigning(false);
     }
   };
   return (
@@ -146,8 +168,12 @@ function ApplicantCard({
         <a href={`tel:${worker.phone.replace(/\s/g, "")}`} className="btn-outline">
           <Phone className="h-4 w-4" /> {t("call")}
         </a>
-        <button onClick={assign} className="btn-primary">
-          {t("assign")}
+        <button
+          onClick={assign}
+          disabled={!canAssign || assigning}
+          className="btn-primary disabled:opacity-60"
+        >
+          {assigning ? "Assigning..." : status === "accepted" ? "Assigned" : t("assign")}
         </button>
       </div>
     </div>

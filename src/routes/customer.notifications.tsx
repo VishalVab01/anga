@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Bell, CheckCircle2 } from "lucide-react";
+import { Bell, CheckCircle2, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { BottomNav } from "@/components/BottomNav";
 import { PageShell } from "@/components/PageShell";
 import { api, type ApiNotification } from "@/lib/api";
@@ -15,6 +16,7 @@ function Notifs() {
   const { t, lang } = useT();
   const [items, setItems] = useState<ApiNotification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [marking, setMarking] = useState(false);
 
   useEffect(() => {
     api
@@ -24,6 +26,20 @@ function Notifs() {
       .finally(() => setLoading(false));
   }, []);
 
+  const markAllRead = async () => {
+    if (marking || items.every((item) => item.read)) return;
+    setMarking(true);
+    try {
+      await api.markNotificationsRead();
+      setItems((current) => current.map((item) => ({ ...item, read: true })));
+      toast.success(lang === "hi" ? "सभी नोटिफिकेशन पढ़े गए" : "Notifications marked read");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update notifications");
+    } finally {
+      setMarking(false);
+    }
+  };
+
   return (
     <PageShell
       title={t("notifications")}
@@ -31,6 +47,17 @@ function Notifs() {
       bottomNav={<BottomNav role="customer" />}
     >
       <div className="space-y-3">
+        {items.some((item) => !item.read) && (
+          <button
+            type="button"
+            onClick={markAllRead}
+            disabled={marking}
+            className="ml-auto flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-xs font-extrabold text-primary disabled:opacity-60"
+          >
+            {marking && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            {lang === "hi" ? "सभी पढ़ें" : "Mark all read"}
+          </button>
+        )}
         {loading && (
           <p className="rounded-2xl bg-muted p-6 text-center text-sm text-muted-foreground">
             Loading notifications...
@@ -44,7 +71,12 @@ function Notifs() {
         {items.map((item) => {
           const Icon = item.type === "application" ? CheckCircle2 : Bell;
           return (
-            <div key={item._id} className="card-soft flex items-start gap-3 p-4">
+            <div
+              key={item._id}
+              className={`card-soft flex items-start gap-3 p-4 ${
+                item.read ? "opacity-75" : "ring-1 ring-primary/15"
+              }`}
+            >
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent/10 text-accent">
                 <Icon className="h-5 w-5" />
               </div>
@@ -57,6 +89,7 @@ function Notifs() {
                 </div>
                 <p className="text-sm text-muted-foreground">{item.message}</p>
               </div>
+              {!item.read && <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-primary" />}
             </div>
           );
         })}

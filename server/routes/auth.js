@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { requireAuth } from "../middleware/auth.js";
 import { Otp } from "../models/Otp.js";
 import { User } from "../models/User.js";
+import { ensureDemoProfile } from "../seed.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const authRouter = express.Router();
@@ -24,6 +25,10 @@ function sign(user) {
   });
 }
 
+function isDemoPhone(phone) {
+  return phone === "1234567890";
+}
+
 authRouter.post(
   "/send-otp",
   asyncHandler(async (req, res) => {
@@ -32,9 +37,9 @@ authRouter.post(
       return res.status(400).json({ message: "Valid phone number required" });
 
     const otp =
-      process.env.NODE_ENV === "production"
-        ? String(Math.floor(100000 + Math.random() * 900000))
-        : "123456";
+      isDemoPhone(phone) || process.env.NODE_ENV !== "production"
+        ? "123456"
+        : String(Math.floor(100000 + Math.random() * 900000));
     await Otp.deleteMany({ phone });
     await Otp.create({
       phone,
@@ -42,8 +47,12 @@ authRouter.post(
       expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
 
-    if (process.env.NODE_ENV !== "production") console.log(`Anga OTP for ${phone}: ${otp}`);
-    res.json({ message: "OTP sent", ...(process.env.NODE_ENV !== "production" ? { otp } : {}) });
+    if (process.env.NODE_ENV !== "production" || isDemoPhone(phone))
+      console.log(`Anga OTP for ${phone}: ${otp}`);
+    res.json({
+      message: "OTP sent",
+      ...(process.env.NODE_ENV !== "production" || isDemoPhone(phone) ? { otp } : {}),
+    });
   }),
 );
 
@@ -66,10 +75,29 @@ authRouter.post(
 
     let user = await User.findOne({ phone });
     if (!user) {
-      user = await User.create({ phone, role, avatarInitial: role === "worker" ? "W" : "C" });
+      user = await User.create({
+        phone,
+        role,
+        name: isDemoPhone(phone) ? (role === "worker" ? "Demo Worker" : "Demo Customer") : "",
+        avatarInitial: role === "worker" ? "W" : "C",
+        location: isDemoPhone(phone) ? "Andheri West, Mumbai" : "",
+        address: isDemoPhone(phone) && role === "customer" ? "Andheri West, Mumbai" : "",
+        isProfileComplete: isDemoPhone(phone),
+      });
     } else if (user.role !== role) {
       user.role = role;
+      if (isDemoPhone(phone)) {
+        user.name = role === "worker" ? "Demo Worker" : "Demo Customer";
+        user.location = "Andheri West, Mumbai";
+        user.address = role === "customer" ? "Andheri West, Mumbai" : "";
+        user.isProfileComplete = true;
+      }
       await user.save();
+    }
+    if (isDemoPhone(phone)) {
+      user.isProfileComplete = true;
+      await user.save();
+      await ensureDemoProfile(user, role);
     }
     await Otp.deleteMany({ phone });
 
