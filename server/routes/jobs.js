@@ -30,6 +30,7 @@ jobsRouter.post(
       title: body.title || body.description?.slice(0, 48) || "Local job",
       category: body.category || body.service,
       description: body.description,
+      problemImageUrl: body.problemImageUrl || "",
       location: body.location,
       wage: Number(body.wage || body.budget),
       date: body.date || "",

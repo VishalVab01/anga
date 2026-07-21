@@ -6,6 +6,7 @@ const jobSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true },
     category: { type: String, required: true, index: true },
     description: { type: String, required: true },
+    problemImageUrl: { type: String, default: "" },
     location: { type: String, required: true },
     wage: { type: Number, required: true },
     date: { type: String, default: "" },

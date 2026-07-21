@@ -175,6 +175,22 @@ function JobDetails() {
               </div>
             </div>
 
+            {job.problemImageUrl && (
+              <div className="mt-4 overflow-hidden rounded-[1.65rem] bg-background p-3 shadow-xl shadow-primary/5">
+                <div className="mb-3 flex items-center justify-between gap-3 px-1">
+                  <h3 className="text-sm font-black">Problem photo</h3>
+                  <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-black uppercase text-primary">
+                    Customer uploaded
+                  </span>
+                </div>
+                <img
+                  src={job.problemImageUrl}
+                  alt="Customer uploaded problem"
+                  className="max-h-56 w-full rounded-[1.35rem] object-cover"
+                />
+              </div>
+            )}
+
             <div className="mt-4 rounded-[1.65rem] bg-background p-4 shadow-xl shadow-primary/5">
               <h3 className="text-sm font-black">
                 {lang === "hi" ? "जरूरी बातें" : "Work requirements"}
@@ -266,6 +282,7 @@ function mapApiJob(job: ApiJob) {
     status: job.status,
     applicationStatus: job.applicationStatus,
     description: job.description,
+    problemImageUrl: job.problemImageUrl || "",
     customer: "Verified customer",
     customerType: "Local customer",
     wageType: job.urgent ? "Urgent" : "Daily wage",
@@ -289,6 +306,7 @@ function mapFallbackJob(job: (typeof fallbackJobs)[number], lang: "en" | "hi") {
     status: job.status,
     applicationStatus: null,
     description: job.description[lang],
+    problemImageUrl: "",
     customer: job.customer[lang],
     customerType: job.customerType[lang],
     wageType: job.wageType[lang],

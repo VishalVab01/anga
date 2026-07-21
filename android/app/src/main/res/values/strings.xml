@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Anga</string>
+    <string name="title_activity_main">Anga</string>
+    <string name="package_name">com.anga.rozgar</string>
+    <string name="custom_url_scheme">com.anga.rozgar</string>
+</resources>

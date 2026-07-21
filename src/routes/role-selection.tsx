@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { HardHat, Loader2, UserRound } from "lucide-react";
+import { ArrowLeft, HardHat, Loader2, UserRound } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -27,6 +27,10 @@ function RoleSelect() {
   const pick = (role: Role) => {
     setRole(role);
     navigate({ to: "/auth/phone" });
+  };
+
+  const goBack = () => {
+    navigate({ to: "/app" });
   };
 
   const startDemo = async (role: Role) => {
@@ -60,6 +64,15 @@ function RoleSelect() {
   return (
     <div className="min-h-screen overflow-hidden bg-background">
       <div className="mx-auto flex min-h-screen max-w-md flex-col px-5 py-7">
+        <button
+          type="button"
+          onClick={goBack}
+          aria-label="Back"
+          className="mb-3 grid h-11 w-11 shrink-0 place-items-center rounded-full border border-border bg-card text-foreground shadow-sm transition hover:bg-muted active:scale-95"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+
         <header className="shrink-0 text-center">
           <h1 className="text-[2rem] font-extrabold leading-tight tracking-normal">
             {t("whoAreYou")}

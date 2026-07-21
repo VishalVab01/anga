@@ -24,6 +24,7 @@ export type ApiJob = {
   title: string;
   category: string;
   description: string;
+  problemImageUrl?: string;
   location: string;
   wage: number;
   date: string;

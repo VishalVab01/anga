@@ -4,9 +4,7 @@ import {
   ArrowUpRight,
   Bell,
   Bookmark,
-  BriefcaseBusiness,
   CheckCircle2,
-  IndianRupee,
   MapPin,
   Mic,
   Search,
@@ -367,30 +365,6 @@ function WorkerHome() {
           </p>
         )}
 
-        <section className="worker-stats relative z-10 grid grid-cols-3 gap-2.5 px-4">
-          <Stat
-            icon={<BriefcaseBusiness className="h-4 w-4" />}
-            label={lang === "hi" ? "आज के काम" : "Today"}
-            value={`${list.length}`}
-            hint={lang === "hi" ? "नए मैच" : "new matches"}
-            tone="primary"
-          />
-          <Stat
-            icon={<IndianRupee className="h-4 w-4" />}
-            label={lang === "hi" ? "मजदूरी" : "Avg wage"}
-            value="₹950"
-            hint={lang === "hi" ? "दिन का औसत" : "daily avg"}
-            tone="money"
-          />
-          <Stat
-            icon={<MapPin className="h-4 w-4" />}
-            label={lang === "hi" ? "दूरी" : "Nearby"}
-            value="5 km"
-            hint={lang === "hi" ? "आपके पास" : "around you"}
-            tone="nearby"
-          />
-        </section>
-
         <section className="worker-categories px-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-extrabold">{t("skills")}</h2>
@@ -627,58 +601,6 @@ function NotificationsDropdown({
             </div>
           );
         })}
-      </div>
-    </div>
-  );
-}
-
-function Stat({
-  icon,
-  label,
-  value,
-  hint,
-  tone,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  hint: string;
-  tone: "primary" | "money" | "nearby";
-}) {
-  const toneClass = {
-    primary: "from-primary/16 via-card to-card text-primary",
-    money: "from-emerald-500/14 via-card to-card text-emerald-600",
-    nearby: "from-sky-500/14 via-card to-card text-sky-600",
-  }[tone];
-  const iconToneClass = {
-    primary: "text-primary",
-    money: "text-emerald-600",
-    nearby: "text-sky-600",
-  }[tone];
-
-  return (
-    <div className="group relative min-w-0 overflow-hidden rounded-[1.2rem] border border-primary/10 bg-card px-2.5 py-2.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] ring-1 ring-white/80 transition hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(37,99,235,0.14)]">
-      <div className={`absolute inset-0 bg-gradient-to-br ${toneClass} opacity-90`} />
-      <div className="pointer-events-none absolute -right-4 -top-8 h-14 w-14 rounded-full bg-white/80 blur-xl" />
-      <div className="relative z-10 flex min-h-[5.6rem] flex-col justify-between">
-        <div className="flex items-center gap-1.5">
-          <span
-            className={`grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white shadow-sm ring-1 ring-primary/5 ${iconToneClass}`}
-          >
-            {icon}
-          </span>
-          <span className="min-w-0 break-words text-[0.62rem] font-black uppercase leading-tight text-muted-foreground">
-            {label}
-          </span>
-        </div>
-        <div>
-          <div className="truncate text-[1.45rem] font-black leading-none tracking-normal text-foreground">
-            {value}
-          </div>
-          <div className="mt-1 truncate text-[0.68rem] font-extrabold leading-tight text-muted-foreground">
-            {hint}
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -944,13 +866,7 @@ function useWorkerHomeAnimations() {
 
     const context = gsap.context(() => {
       gsap.fromTo(
-        [
-          ".worker-hero",
-          ".worker-stats > *",
-          ".worker-categories",
-          ".featured-job-card",
-          ".worker-jobs .card-soft",
-        ],
+        [".worker-hero", ".worker-categories", ".featured-job-card", ".worker-jobs .card-soft"],
         { autoAlpha: 0, y: 22, scale: 0.98 },
         {
           autoAlpha: 1,
