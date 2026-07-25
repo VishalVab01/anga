@@ -1146,13 +1146,14 @@ function useLandingAnimations(demoMode: boolean) {
         {
           autoAlpha: 1,
           yPercent: 0,
-          duration: 1.15,
           stagger: 0.12,
-          ease: "power4.out",
+          ease: "power2.out",
           scrollTrigger: {
             trigger: ".footer-wordmark",
-            start: "top 92%",
-            once: true,
+            start: "top 96%",
+            end: "top 68%",
+            scrub: 0.85,
+            invalidateOnRefresh: true,
           },
         },
       );
