@@ -1146,13 +1146,13 @@ function useLandingAnimations(demoMode: boolean) {
         {
           autoAlpha: 1,
           yPercent: 0,
-          stagger: 0.12,
-          ease: "power2.out",
+          stagger: 0.16,
+          ease: "power3.out",
           scrollTrigger: {
             trigger: ".footer-wordmark",
-            start: "top 96%",
-            end: "top 68%",
-            scrub: 0.85,
+            start: "top 98%",
+            end: "top 48%",
+            scrub: 1.5,
             invalidateOnRefresh: true,
           },
         },
