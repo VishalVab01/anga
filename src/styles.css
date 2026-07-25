@@ -464,6 +464,18 @@
     isolation: isolate;
   }
 
+  @media (prefers-reduced-motion: no-preference) {
+    .zentivo-nav-wrap,
+    .zentivo-hero .hero-title,
+    .zentivo-hero .hero-subtitle,
+    .zentivo-hero .hero-actions,
+    .zentivo-hero .hero-device,
+    .zentivo-hero .hero-assistant-card {
+      visibility: hidden;
+      opacity: 0;
+    }
+  }
+
   .zentivo-hero::after {
     content: "";
     position: absolute;
