@@ -2,126 +2,246 @@ import { createFileRoute } from "@tanstack/react-router";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
-  BadgeCheck,
   ArrowLeft,
+  ArrowUpRight,
+  BadgeCheck,
+  BarChart3,
+  BatteryMedium,
   Bell,
   Bot,
   BriefcaseBusiness,
+  CalendarClock,
   CheckCircle2,
+  Car,
+  Download,
+  Hammer,
   Languages,
   MapPin,
+  MessageCircle,
+  Mic,
+  Package,
+  Paintbrush,
   Phone,
-  Send,
+  Rocket,
+  Search,
   ShieldCheck,
+  Signal,
   Sparkles,
+  Star,
   Users,
   Wallet,
+  Wifi,
+  Wrench,
+  Zap,
+  type LucideIcon,
 } from "lucide-react";
 import { useEffect, useLayoutEffect, useState } from "react";
-import { PhoneMockup } from "@/components/PhoneMockup";
 import { api } from "@/lib/api";
+import defaultWorkerProfileImage from "@/assets/profile/construction-worker.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "anga - Daily wage jobs and trusted local hiring" },
+      { title: "anga - Find work. Hire trusted local workers." },
       {
         name: "description",
         content:
-          "anga connects daily-wage workers with nearby jobs and helps customers hire verified local workers.",
+          "Anga is a mobile-first Rozgar platform for daily-wage workers and trusted nearby hiring.",
       },
     ],
   }),
   component: Landing,
 });
 
-const trustBadges = ["Daily wage jobs", "Verified workers", "Hindi + English", "Nearby matching"];
+const navItems = ["Features", "Solutions", "Impact", "FAQ"];
 
-const whyAnga = [
+const logoStrip: Array<{ label: string; icon: LucideIcon }> = [
+  { label: "Electricians", icon: Zap },
+  { label: "Plumbers", icon: Wrench },
+  { label: "Carpenters", icon: Hammer },
+  { label: "Painters", icon: Paintbrush },
+  { label: "Drivers", icon: Car },
+  { label: "House Help", icon: Users },
+  { label: "Delivery", icon: Package },
+  { label: "AC Repair", icon: ShieldCheck },
+];
+
+const framerHeroAssets = {
+  bg: "https://framerusercontent.com/images/2wnaY86AQR4DAMdYqVvA8vPbGY.png?width=4800&height=3928",
+  cloudOne:
+    "https://framerusercontent.com/images/oY2Pf5qqEUWBgIBTFJAmISh4.png?width=1456&height=1520",
+  cloudTwo:
+    "https://framerusercontent.com/images/fzecrnrVdLntVeG2vqjM3xOZ8w.png?width=2008&height=1956",
+  cloudRight:
+    "https://framerusercontent.com/images/2HenEdlws5AbpQ9S9RRJ4xQvLc0.png?width=4923&height=4778",
+};
+
+const platformFeatures: FeatureCard[] = [
   {
-    title: "Made for daily-wage work",
-    text: "The product is built around local rozgar, daily wages, nearby distance, fast hiring and simple job status updates.",
-    icon: BriefcaseBusiness,
+    icon: Bot,
+    title: "AI Rozgar Assistant",
+    text: "Ask in Hindi or English and get job matches, worker suggestions, safety help and next actions.",
   },
   {
-    title: "Trust before assignment",
-    text: "Verified badges, ratings, document status, report issue and SOS actions help both sides feel safer.",
+    icon: MapPin,
+    title: "Nearby Matching",
+    text: "Show daily-wage jobs and workers around the user's selected area first.",
+  },
+  {
     icon: ShieldCheck,
+    title: "Trust Signals",
+    text: "Verified badges, ratings, document status and reporting make local hiring safer.",
   },
   {
-    title: "Simple for local users",
-    text: "Mobile OTP login, Hindi and English support, clear cards and direct actions reduce confusion for workers and customers.",
-    icon: Languages,
+    icon: Wallet,
+    title: "Daily Wage Clarity",
+    text: "Every job highlights wage, time, distance, urgency and payment expectations.",
   },
 ];
 
-const assistantHighlights = [
-  "Understands Hindi + English job requests",
-  "Searches Anga jobs, workers, safety and app help",
-  "Shows grounded source cards with next actions",
-  "Helps workers find work and customers hire faster",
-];
-
-const howItWorks = [
+const steps = [
   {
-    title: "Create your profile",
-    text: "Workers add skills, wage, documents and availability. Customers add their hiring address.",
+    number: "1",
+    title: "Create a trusted profile",
+    text: "Workers add skills, wage, availability, photo and documents. Customers add address and hiring type.",
   },
   {
-    title: "Find or post nearby work",
-    text: "Workers see local jobs. Customers post clear daily-wage work with budget and urgency.",
+    number: "2",
+    title: "Find or post local work",
+    text: "Workers search nearby openings. Customers post jobs with description, date, budget and problem photo.",
   },
   {
-    title: "Apply, hire, complete and rate",
-    text: "Simple applications, applicant review, assignment, safety actions and ratings.",
+    number: "3",
+    title: "Apply, hire and complete",
+    text: "Track applications, assign workers, use SOS/reporting after acceptance, and complete with ratings.",
   },
 ];
 
-const features = [
-  { title: "Worker and customer roles", icon: Users },
-  { title: "Mobile OTP login", icon: Phone },
-  { title: "Nearby jobs", icon: MapPin },
-  { title: "Daily wage transparency", icon: Wallet },
-  { title: "Job applications", icon: BriefcaseBusiness },
-  { title: "View applicants", icon: Send },
-  { title: "Verified profiles", icon: BadgeCheck },
-  { title: "Notifications", icon: Bell },
-  { title: "Hindi/English support", icon: Languages },
-  { title: "AI Rozgar Assistant", icon: Bot },
+const workspaceItems = [
+  {
+    title: "Smart AI Conversations Anytime",
+    text: "Get instant Rozgar help, job matches and hiring guidance with an AI assistant available whenever users need it.",
+  },
+  {
+    title: "AI Powered Worker Matching",
+    text: "Match nearby workers to jobs using skills, availability, wage expectations and distance.",
+  },
+  {
+    title: "Smarter Job Posting Automation",
+    text: "Turn a short request into a clear job post with role, timing, budget and location details.",
+  },
+  {
+    title: "Secure Trust And Safety Tools",
+    text: "Use verified profiles, ratings, reporting and SOS support to hire and work with more confidence.",
+  },
+];
+
+const categories: FeatureCard[] = [
+  { icon: Zap, title: "Electricians", text: "Fans, wiring, MCB, switches and local repair work." },
+  {
+    icon: Hammer,
+    title: "Carpenters",
+    text: "Furniture, doors, shelves, polish and fitting work.",
+  },
+  {
+    icon: BriefcaseBusiness,
+    title: "Delivery Workers",
+    text: "Parcel, grocery and local delivery jobs.",
+  },
+  { icon: Users, title: "House Helpers", text: "Cooking, cleaning, daily help and home support." },
+  {
+    icon: CalendarClock,
+    title: "Drivers",
+    text: "Daily pickup, local driving and scheduled trips.",
+  },
+  {
+    icon: BadgeCheck,
+    title: "Skilled Repairs",
+    text: "Plumbing, painting, AC service and urgent repairs.",
+  },
 ];
 
 const impact = [
-  { value: "8+", label: "Job categories" },
-  { value: "2", label: "User roles" },
-  { value: "1 km", label: "Nearby matching" },
-  { value: "Hindi + English", label: "Local language support" },
+  {
+    label: "More local categories",
+    value: "8+",
+    text: "Workers can discover jobs across electrician, plumbing, delivery and home-service roles.",
+    icon: BarChart3,
+    wide: true,
+  },
+  {
+    label: "Faster applications",
+    value: "91%",
+    text: "Clear wages, distance and timing help workers apply with fewer steps.",
+    icon: Zap,
+  },
+  {
+    label: "Better matching",
+    value: "69%",
+    text: "Nearby worker discovery makes local hiring feel faster and more reliable.",
+    icon: Rocket,
+  },
+];
+
+const testimonials = [
+  {
+    quote:
+      "Anga makes daily-wage hiring simple. We can post a job, compare workers and assign someone nearby quickly.",
+    name: "Demo Customer",
+    role: "Homeowner",
+  },
+  {
+    quote:
+      "The app shows wage, location and timing clearly. Workers know what they are applying for before calling.",
+    name: "Demo Worker",
+    role: "Electrician",
+  },
+  {
+    quote:
+      "The AI assistant helps judges and users understand the platform without needing to explore every screen.",
+    name: "Hackathon Demo",
+    role: "Rozgar category",
+  },
+];
+
+const faqs = [
+  {
+    question: "What is Anga?",
+    answer:
+      "Anga is a Rozgar platform that connects local daily-wage workers with nearby work and helps customers hire trusted local workers.",
+  },
+  {
+    question: "Can I use it for local hiring?",
+    answer:
+      "Yes. Customers can post nearby work, view applicants and assign trusted workers. Workers can discover matching jobs by skill, wage and distance.",
+  },
+  {
+    question: "Is my data secure?",
+    answer:
+      "Anga keeps the demo flow simple while still showing production trust patterns like verified profiles, uploaded documents, issue reporting and safe job-status tracking.",
+  },
+  {
+    question: "Can workers apply anytime?",
+    answer:
+      "Workers can mark availability, search recent job posts, apply to relevant openings and track Pending, Accepted, Rejected or Completed status.",
+  },
+  {
+    question: "Does Anga support Hindi and English?",
+    answer:
+      "Yes. Major headings, CTAs and assistant prompts are built for simple Hindi and English usage for local workers and customers.",
+  },
 ];
 
 function Landing() {
   const [demoMode, setDemoMode] = useState(false);
-  const [showPhoneCue, setShowPhoneCue] = useState(true);
+  const [openFaqIndex, setOpenFaqIndex] = useState(0);
+  const [openWorkspaceIndex, setOpenWorkspaceIndex] = useState(0);
 
   useLandingAnimations(demoMode);
 
   useEffect(() => {
     void api.warmup();
   }, []);
-
-  useEffect(() => {
-    if (!showPhoneCue || typeof window === "undefined") return;
-
-    const dismissCueOnPhoneFocus = () => {
-      window.setTimeout(() => {
-        const activeElement = document.activeElement;
-        if (activeElement instanceof HTMLIFrameElement && activeElement.closest(".landing-phone")) {
-          setShowPhoneCue(false);
-        }
-      }, 0);
-    };
-
-    window.addEventListener("blur", dismissCueOnPhoneFocus);
-    return () => window.removeEventListener("blur", dismissCueOnPhoneFocus);
-  }, [showPhoneCue]);
 
   if (demoMode) {
     return (
@@ -135,260 +255,625 @@ function Landing() {
           <ArrowLeft className="h-4 w-4" />
           Back to home
         </button>
-        <PhoneMockup src="/app" title="interactive anga app demo" className="phone-demo-focus" />
+        <iframe
+          src="/app"
+          title="interactive Anga app demo"
+          className="demo-app-viewport"
+          loading="eager"
+        />
       </main>
     );
   }
 
   return (
-    <main className="landing-page min-h-screen overflow-hidden bg-background text-foreground">
-      <section className="relative">
-        <div className="mx-auto grid min-h-screen max-w-7xl items-center gap-12 px-5 py-10 sm:px-8 lg:grid-cols-[1fr_470px] lg:px-10 lg:py-12">
-          <div className="hero-copy max-w-3xl">
-            <div className="hero-eyebrow mb-8 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-card/80 px-4 py-2 text-sm font-bold text-primary shadow-sm">
-              <ShieldCheck className="h-4 w-4" />
-              Built for Rozgar, trust and local daily work
+    <main className="zentivo-landing min-h-screen overflow-hidden text-foreground">
+      <section className="zentivo-hero relative min-h-screen overflow-hidden">
+        <header className="zentivo-nav-wrap">
+          <a href="#" className="zentivo-brand-pill" aria-label="Anga home">
+            <img className="brand-mark" src="/playstore.png" alt="" />
+            <span>anga</span>
+          </a>
+          <nav className="zentivo-nav">
+            {navItems.map((item) => (
+              <a key={item} href={`#${item.toLowerCase()}`} className="nav-chip">
+                {item}
+              </a>
+            ))}
+          </nav>
+          <button type="button" className="nav-cta">
+            Download Now
+            <ArrowUpRight className="h-5 w-5" />
+          </button>
+        </header>
+
+        <CloudLayer />
+
+        <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col items-center px-5 pb-0 pt-32 text-center sm:px-8 lg:px-10 lg:pt-44">
+          <h1 className="hero-title max-w-4xl text-4xl font-normal leading-[0.98] tracking-normal text-slate-950 sm:text-5xl lg:text-[4.05rem]">
+            App That Connects. Hires. Gets Work Done.
+          </h1>
+          <p className="hero-subtitle mt-5 max-w-3xl text-sm font-medium leading-6 text-slate-700/70 sm:text-base">
+            Anga connects electricians, plumbers, carpenters, painters, drivers, house helpers and
+            delivery workers with nearby daily-wage opportunities.
+          </p>
+
+          <div className="hero-actions mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <button type="button" className="hero-primary">
+              <span className="button-label-roller">
+                <span className="button-label-track">
+                  <span>Download Now</span>
+                  <span aria-hidden="true">Download Now</span>
+                </span>
+              </span>
+              <Download className="hero-button-icon h-5 w-5" />
+            </button>
+            <button type="button" onClick={() => setDemoMode(true)} className="hero-secondary">
+              <span className="ai-icon-wrap">
+                <Sparkles className="hero-ai-icon h-6 w-6" />
+              </span>
+              <span className="button-label-roller">
+                <span className="button-label-track">
+                  <span>Try Live Demo</span>
+                  <span aria-hidden="true">Try Live Demo</span>
+                </span>
+              </span>
+            </button>
+          </div>
+
+          <div className="hero-stage hero-showcase relative mt-7 w-full">
+            <div className="hero-assistant-card hero-voice-card">
+              <div className="voice-bars" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
+              <p className="text-sm font-bold text-slate-950">Hiring by AI Voice</p>
+              <p className="mt-1 text-xs font-medium leading-5 text-slate-500">
+                Speak in Hindi or English. Anga finds nearby work fast.
+              </p>
             </div>
 
-            <p className="hero-brand text-5xl font-black tracking-normal text-primary sm:text-7xl">
-              anga
-            </p>
-            <h1 className="hero-title mt-5 max-w-3xl text-4xl font-black leading-[1.05] tracking-normal text-foreground sm:text-6xl">
-              Find daily work. Hire trusted local workers.
-            </h1>
-            <p className="hero-subtext mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-              anga connects local workers like electricians, plumbers, carpenters, painters,
-              drivers, house helpers and daily-wage labourers with nearby job opportunities.
-            </p>
-
-            <div className="hero-actions mt-8 flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
-                onClick={() => setDemoMode(true)}
-                className="btn-primary text-base shadow-lg"
-              >
-                <Sparkles className="h-5 w-5" />
-                Try Demo
-              </button>
-              {/* <a href="/app" className="btn-outline bg-card/80 text-base">
-                Download App
-              </a> */}
+            <div className="hero-device">
+              <img
+                src="/anga-phone-hand-blank.png"
+                alt="Anga app displayed in a phone held by hand"
+                className="hero-device-frame"
+              />
+              <span className="hero-device-screen" aria-hidden="true">
+                <span className="hero-phone-status">
+                  <span className="hero-phone-time">9:41</span>
+                  <span className="hero-phone-island" />
+                  <span className="hero-phone-indicators">
+                    <Signal />
+                    <Wifi />
+                    <BatteryMedium />
+                  </span>
+                </span>
+                <img src="/hero-app-screen.png" alt="" />
+              </span>
             </div>
 
-            <div className="demo-credentials mt-5 max-w-xl rounded-[1.5rem] border border-primary/15 bg-card/90 p-4 shadow-lg shadow-primary/5">
-              <div className="flex items-start gap-3">
-                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
-                  <Phone className="h-5 w-5" />
+            <div className="hero-assistant-card hero-rag-card">
+              <div className="hero-rag-header">
+                <span className="hero-rag-back">
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                </span>
+                <span>AI Suggestions</span>
+              </div>
+              <div className="hero-rag-thread">
+                <div className="hero-rag-row">
+                  <span className="hero-rag-avatar">
+                    <Bot className="h-3.5 w-3.5" />
+                  </span>
+                  <p>6 verified electricians available within 5 km.</p>
                 </div>
-                <div>
-                  <p className="text-sm font-extrabold text-foreground">Demo login for judges</p>
-                  <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                    No real phone number needed. Use mobile number{" "}
-                    <span className="font-extrabold text-primary">1234567890</span> and OTP{" "}
-                    <span className="font-extrabold text-primary">1234</span>.
-                  </p>
+                <div className="hero-rag-row">
+                  <span className="hero-rag-avatar">
+                    <Bot className="h-3.5 w-3.5" />
+                  </span>
+                  <p>Recommended wage: ₹850-₹1,100 for today.</p>
                 </div>
+                <p className="hero-rag-user">Post this as urgent?</p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
 
-            <div className="hero-badges mt-8 flex flex-wrap gap-2">
-              {trustBadges.map((badge) => (
-                <span
-                  key={badge}
-                  className="inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-3.5 py-2 text-sm font-bold text-foreground shadow-sm"
-                >
-                  <CheckCircle2 className="h-4 w-4 text-success" />
-                  {badge}
-                </span>
+      <LogoStrip />
+
+      <section id="features" className="zentivo-section">
+        <div className="features-showcase mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
+          <div className="features-showcase-header section-header mx-auto text-center">
+            <h2>One Rozgar Platform For Every Local Workflow</h2>
+            <p>
+              Anga helps local workers find nearby daily-wage jobs and helps customers hire trusted
+              people faster with simple flows, matching and AI support.
+            </p>
+          </div>
+
+          <div className="features-showcase-grid mt-8">
+            <div className="features-side-stack">
+              {platformFeatures.slice(0, 2).map((feature) => (
+                <FeatureCard key={feature.title} feature={feature} showcase />
+              ))}
+            </div>
+
+            <div className="features-phone-panel" aria-hidden="true">
+              <img src="/feature-phone-blank.png" alt="" className="features-phone-cloud-image" />
+            </div>
+
+            <div className="features-side-stack">
+              {platformFeatures.slice(2).map((feature) => (
+                <FeatureCard key={feature.title} feature={feature} showcase />
               ))}
             </div>
           </div>
-
-          <div
-            className="landing-phone relative flex justify-center lg:justify-end"
-            onPointerDownCapture={() => setShowPhoneCue(false)}
-          >
-            <div
-              className={`phone-interactive-cue ${showPhoneCue ? "" : "phone-interactive-cue-hidden"}`}
-              aria-hidden="true"
-            >
-              <span className="phone-cue-dot" />
-              <div>
-                <p className="font-extrabold">Try it here</p>
-                <p className="text-xs text-muted-foreground">The app is live inside this phone</p>
-              </div>
-            </div>
-            <div className="phone-preview-wrap relative">
-              <PhoneMockup src="/app" title="anga mobile app preview" className="phone-hero" />
-              {showPhoneCue && (
-                <button
-                  type="button"
-                  className="phone-cue-dismiss-layer"
-                  onPointerDown={() => setShowPhoneCue(false)}
-                  aria-label="Start interacting with phone demo"
-                />
-              )}
-            </div>
-          </div>
         </div>
       </section>
 
-      <section className="landing-section">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
-          <SectionHeader
-            eyebrow="Why anga"
-            title="Designed for local rozgar, not generic service booking"
-            text="anga focuses on daily-wage employment, nearby matching, trust signals and simple flows that work for local workers and customers."
-          />
-          <div className="landing-card-grid mt-8 grid gap-4 md:grid-cols-3">
-            {whyAnga.map((item) => {
-              const Icon = item.icon;
-              return (
-                <article key={item.title} className="landing-card">
-                  <div className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-xl font-extrabold">{item.title}</h3>
-                  <p className="mt-3 leading-7 text-muted-foreground">{item.text}</p>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="landing-section">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
-          <div className="ai-assistant-panel grid gap-8 rounded-[2rem] border border-primary/15 bg-card p-6 shadow-xl shadow-primary/5 md:grid-cols-[0.9fr_1.1fr] md:p-8 lg:p-10">
-            <div>
-              <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-primary">
-                AI Rozgar Assistant
+      <section id="solutions" className="zentivo-section">
+        <div className="mx-auto max-w-[72rem] px-5 sm:px-8 lg:px-10">
+          <div className="workflow-timeline-panel">
+            <div className="workflow-timeline-copy">
+              <h2>Start Local Work Smarter In Minutes</h2>
+              <p>
+                Create a trusted profile, match nearby, then apply or assign local daily-wage work
+                with clear wages and trust signals.
               </p>
-              <h2 className="mt-3 max-w-xl text-3xl font-black tracking-normal sm:text-5xl">
-                A personal helper for jobs, hiring and safety.
-              </h2>
-              <p className="mt-4 leading-7 text-muted-foreground">
-                The assistant sits inside the app as a circular bot icon. It answers using Anga job,
-                worker, profile, payment and safety information, then points users to the right
-                action.
-              </p>
+              <button type="button" className="hero-primary">
+                Download Now
+                <Download className="h-4 w-4" />
+              </button>
             </div>
 
-            <div className="grid gap-3">
-              <div className="rounded-[1.5rem] bg-primary p-5 text-primary-foreground shadow-lg shadow-primary/20">
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-sm font-bold">
-                  <Bot className="h-4 w-4" />
-                  Example
-                </div>
-                <p className="text-lg font-extrabold">“Mujhe aaj electrician ka kaam chahiye”</p>
-                <p className="mt-3 text-sm leading-6 text-primary-foreground/80">
-                  The assistant finds matching electrician jobs, relevant worker/customer details,
-                  wages, distance and next steps from Anga data.
-                </p>
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {assistantHighlights.map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-start gap-2 rounded-2xl bg-primary/5 p-3 text-sm font-bold text-foreground"
+            <div className="workflow-timeline-visual" aria-hidden="true">
+              <svg viewBox="0 0 1240 430" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient
+                    id="workflowWaveGradient"
+                    x1="0"
+                    x2="1"
+                    y1="0"
+                    y2="0"
+                    gradientUnits="objectBoundingBox"
                   >
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                    {item}
-                  </div>
-                ))}
-              </div>
+                    <stop offset="0%" stopColor="#2563eb" stopOpacity="0" />
+                    <stop offset="12%" stopColor="#2563eb" stopOpacity="0.16" />
+                    <stop offset="24%" stopColor="#2563eb" stopOpacity="0.62" />
+                    <stop offset="46%" stopColor="#2563eb" stopOpacity="0.98" />
+                    <stop offset="76%" stopColor="#2563eb" stopOpacity="0.82" />
+                    <stop offset="91%" stopColor="#b7ccff" stopOpacity="0.28" />
+                    <stop offset="100%" stopColor="#b7ccff" stopOpacity="0" />
+                  </linearGradient>
+                  <linearGradient
+                    id="workflowWaveShadowGradient"
+                    x1="0"
+                    x2="1"
+                    y1="0"
+                    y2="0"
+                    gradientUnits="objectBoundingBox"
+                  >
+                    <stop offset="0%" stopColor="#dbe5ff" stopOpacity="0" />
+                    <stop offset="16%" stopColor="#dbe5ff" stopOpacity="0.42" />
+                    <stop offset="52%" stopColor="#b8ccff" stopOpacity="0.52" />
+                    <stop offset="88%" stopColor="#dbe5ff" stopOpacity="0.32" />
+                    <stop offset="100%" stopColor="#dbe5ff" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <path
+                  className="workflow-path-shadow"
+                  d="M25 280 C150 350 270 332 372 224 C460 130 560 120 648 178 C725 230 780 230 852 188 C948 132 1006 70 1112 65 C1160 64 1204 82 1224 104"
+                />
+                <path
+                  className="workflow-path"
+                  d="M25 280 C150 350 270 332 372 224 C460 130 560 120 648 178 C725 230 780 230 852 188 C948 132 1006 70 1112 65 C1160 64 1204 82 1224 104"
+                />
+              </svg>
+              <span className="timeline-node timeline-node-one" />
+              <span className="timeline-node timeline-node-two" />
+              <span className="timeline-node timeline-node-three" />
             </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="landing-section">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
-          <SectionHeader
-            eyebrow="How it works"
-            title="Simple enough for daily use"
-            text="The product flow is built around local trust, fast matching and clear wages."
-          />
-          <div className="landing-card-grid mt-8 grid gap-4 md:grid-cols-3">
-            {howItWorks.map((item, index) => (
-              <article key={item.title} className="landing-card">
-                <div className="mb-5 grid h-11 w-11 place-items-center rounded-2xl bg-primary text-lg font-black text-primary-foreground">
-                  {index + 1}
+            {steps.map((step) => (
+              <article
+                key={step.number}
+                className={`workflow-timeline-step workflow-timeline-step-${step.number}`}
+              >
+                <span>{step.number}</span>
+                <div>
+                  <h3>{step.title}</h3>
+                  <p>{step.text}</p>
                 </div>
-                <h3 className="text-xl font-extrabold">{item.title}</h3>
-                <p className="mt-3 leading-7 text-muted-foreground">{item.text}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="landing-section">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
-          <SectionHeader
-            eyebrow="Platform features"
-            title="A real employment platform, not a booking template"
-            text="anga focuses on nearby daily-wage jobs, worker trust, transparent payment and simple bilingual flows."
-          />
-          <div className="landing-card-grid mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {features.map((feature) => {
-              const Icon = feature.icon;
-              return (
-                <article key={feature.title} className="landing-card landing-feature-card">
-                  <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/10 text-primary">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="mt-4 font-extrabold leading-snug">{feature.title}</h3>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+      <section id="workspace" className="zentivo-section">
+        <div className="mx-auto max-w-[76rem] px-5 sm:px-8 lg:px-10">
+          <div className="workspace-grid">
+            <div className="workspace-copy">
+              <h2>Your Rozgar Workspace, All in One Place</h2>
+              <p>
+                Manage worker profiles, customer job posts, AI guidance and trust tools from one
+                simple mobile-first Rozgar platform.
+              </p>
+              <div className="workspace-list">
+                {workspaceItems.map((item, index) => {
+                  const isOpen = openWorkspaceIndex === index;
+                  const descriptionId = `workspace-description-${index}`;
 
-      <section className="landing-section">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
-          <div className="impact-panel rounded-[2rem] border border-primary/15 bg-primary px-6 py-8 text-primary-foreground shadow-2xl shadow-primary/20 sm:px-8 lg:px-10">
-            <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-              <div>
-                <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-primary-foreground/70">
-                  Impact
-                </p>
-                <h2 className="mt-3 max-w-xl text-3xl font-black tracking-normal sm:text-5xl">
-                  Built for daily wage employment.
-                </h2>
-                <p className="mt-4 max-w-xl leading-7 text-primary-foreground/80">
-                  The product brings worker onboarding, job discovery, hiring, applications and
-                  safety signals into one local-first experience.
-                </p>
+                  return (
+                    <article
+                      key={item.title}
+                      className={`workspace-line ${isOpen ? "is-open" : ""}`}
+                    >
+                      <h3>
+                        <button
+                          type="button"
+                          className="workspace-line-trigger"
+                          aria-expanded={isOpen}
+                          aria-controls={descriptionId}
+                          onClick={() => {
+                            setOpenWorkspaceIndex(index);
+                            window.setTimeout(() => ScrollTrigger.refresh(), 480);
+                          }}
+                        >
+                          {item.title}
+                        </button>
+                      </h3>
+                      <div
+                        id={descriptionId}
+                        className="workspace-line-description"
+                        aria-hidden={!isOpen}
+                      >
+                        <div>
+                          <p>{item.text}</p>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {impact.map((item) => (
-                  <div
-                    key={item.label}
-                    className="impact-stat rounded-3xl border border-white/15 bg-white/10 p-5 shadow-sm"
-                  >
-                    <p className="text-3xl font-black">{item.value}</p>
-                    <p className="mt-2 text-sm font-bold text-primary-foreground/75">
-                      {item.label}
-                    </p>
-                  </div>
-                ))}
-              </div>
+            </div>
+            <div className="workspace-phone-visual" aria-hidden="true">
+              <img src="/workspace-phone-blank.png" alt="" />
             </div>
           </div>
         </div>
       </section>
+
+      <section id="categories" className="zentivo-section categories-section">
+        <div className="mx-auto max-w-[76rem] px-5 sm:px-8 lg:px-10">
+          <div className="categories-header">
+            <h2>Built For Every Daily-Wage Role</h2>
+          </div>
+          <div className="category-grid">
+            {categories.map((feature) => (
+              <FeatureCard key={feature.title} feature={feature} category />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="impact" className="zentivo-section">
+        <div className="mx-auto max-w-[72rem] px-5 sm:px-8 lg:px-10">
+          <div className="growth-reference">
+            <div className="growth-reference-copy">
+              <div>
+                <h2>Built for Modern Growing Local Hiring</h2>
+                <p>
+                  Thousands of workers and customers can use Anga to find nearby work, post jobs,
+                  make faster hiring decisions and complete trusted daily-wage workflows.
+                </p>
+              </div>
+
+              <div className="growth-reference-proof">
+                <p>
+                  <span>All in one Rozgar workspace</span> to create profiles, post work, match
+                  locally and hire trusted workers faster.
+                </p>
+                <div className="growth-users">
+                  <div className="growth-avatars" aria-hidden="true">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <img
+                        key={index}
+                        src={defaultWorkerProfileImage}
+                        alt=""
+                        style={{ objectPosition: `${45 + index * 4}% center` }}
+                      />
+                    ))}
+                  </div>
+                  <span>Trusted by local workers and customers</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="growth-reference-stats">
+              {impact.map((item) => (
+                <article
+                  key={item.label}
+                  className={`growth-stat-card ${item.wide ? "growth-stat-card-wide" : ""}`}
+                >
+                  <div className="growth-stat-label">
+                    <span>
+                      <item.icon className="h-4 w-4" />
+                    </span>
+                    {item.label}
+                  </div>
+                  <p
+                    className="growth-stat-value"
+                    data-counter-target={Number.parseInt(item.value, 10)}
+                    data-counter-suffix={item.value.replace(/\d/g, "")}
+                    aria-label={item.value}
+                  >
+                    {item.value}
+                  </p>
+                  <p className="growth-stat-text">{item.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="zentivo-section reviews-section">
+        <div className="mx-auto max-w-[68rem] px-5 sm:px-8 lg:px-10">
+          <SectionHeader
+            eyebrow="Loved by users"
+            title="Designed For Workers, Customers And Judges"
+            text="The product is easy to understand in a demo and practical enough for real local employment use cases."
+          />
+          <div className="testimonial-rail grid lg:grid-cols-3">
+            {testimonials.map((item) => (
+              <article key={item.name} className="testimonial-card">
+                <div className="testimonial-stars flex gap-1 text-amber-400">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Star key={index} className="fill-current" />
+                  ))}
+                </div>
+                <p className="testimonial-quote">"{item.quote}"</p>
+                <div className="testimonial-author flex items-center">
+                  <div className="testimonial-avatar grid place-items-center rounded-full bg-primary text-primary-foreground">
+                    {item.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="font-black">{item.name}</p>
+                    <p className="testimonial-role text-muted-foreground">{item.role}</p>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="faq" className="zentivo-section">
+        <div className="mx-auto max-w-[62rem] px-5 sm:px-8 lg:px-10">
+          <div className="faq-header">
+            <h2>Everything You Need to Know</h2>
+            <p>
+              Explore everything you need to know about Anga, from setup and safety to finding and
+              hiring local workers.
+            </p>
+          </div>
+          <div className="faq-list">
+            {faqs.map((faq, index) => (
+              <article
+                key={faq.question}
+                className={`faq-row ${openFaqIndex === index ? "faq-row-open" : ""}`}
+              >
+                <button
+                  type="button"
+                  className="faq-question"
+                  onClick={() => setOpenFaqIndex(openFaqIndex === index ? -1 : index)}
+                  aria-expanded={openFaqIndex === index}
+                >
+                  <span>{faq.question}</span>
+                  <span className="faq-toggle" aria-hidden="true">
+                    <span />
+                    <span />
+                  </span>
+                </button>
+                {openFaqIndex === index && <p className="faq-answer">{faq.answer}</p>}
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="zentivo-final-cta relative">
+        <CloudLayer />
+        <div className="final-cta-inner">
+          <div className="final-cta-copy">
+            <h2>Ready to Work Smarter with AI?</h2>
+            <p>
+              Join local workers and customers using Anga to find work faster, hire trusted people
+              nearby, and complete daily-wage jobs with AI support.
+            </p>
+          </div>
+
+          <div className="final-cta-actions">
+            <button type="button" onClick={() => setDemoMode(true)} className="hero-primary">
+              Get Started Free
+              <ArrowUpRight className="hero-button-icon h-5 w-5" />
+            </button>
+            <button type="button" onClick={() => setDemoMode(true)} className="hero-secondary">
+              <span className="ai-icon-wrap">
+                <Sparkles className="hero-ai-icon h-6 w-6" />
+              </span>
+              Try Live Demo
+            </button>
+          </div>
+
+          <div className="final-cta-device" aria-hidden="true">
+            <img src="/anga-phone-hand.png" alt="" />
+          </div>
+        </div>
+      </section>
+
+      <footer className="zentivo-footer">
+        <div className="footer-inner">
+          <div className="footer-top">
+            <div className="footer-brand-block">
+              <a href="#" className="footer-brand" aria-label="Anga home">
+                <img src="/playstore.png" alt="" />
+                <span>anga</span>
+              </a>
+              <p>
+                Smarter Rozgar for local work, helping workers find jobs and customers hire trusted
+                nearby people.
+              </p>
+            </div>
+            <FooterColumn
+              title="Product"
+              items={["Features", "Demo", "Worker App", "Customer App"]}
+            />
+            <FooterColumn title="Resources" items={["AI Assistant", "Trust", "Safety", "FAQ"]} />
+            <FooterColumn title="Company" items={["About", "Hackathon", "Contact", "Rozgar"]} />
+          </div>
+
+          <div className="footer-wordmark" aria-hidden="true">
+            {["a", "n", "g", "a"].map((letter, index) => (
+              <span key={`${letter}-${index}`} className="footer-wordmark-letter">
+                {letter}
+              </span>
+            ))}
+          </div>
+
+          <div className="footer-bottom">
+            <p>Built by Team Waffles</p>
+            <p>they hate us cause they ain&apos;t us</p>
+            <p>Build for Good 2026</p>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
 
-function SectionHeader({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
+function CloudLayer() {
   return (
-    <div className="section-header">
-      <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-primary">{eyebrow}</p>
-      <h2 className="mt-3 max-w-3xl text-3xl font-black tracking-normal sm:text-5xl">{title}</h2>
-      <p className="mt-4 max-w-2xl leading-7 text-muted-foreground">{text}</p>
+    <div className="cloud-layer" aria-hidden="true">
+      <img className="hero-bg-image" src={framerHeroAssets.bg} alt="" />
+      <div className="cloud-float-layer">
+        <img className="cloud cloud-one" src={framerHeroAssets.cloudOne} alt="" />
+        <img className="cloud cloud-two" src={framerHeroAssets.cloudTwo} alt="" />
+        <img className="cloud cloud-three" src={framerHeroAssets.cloudRight} alt="" />
+        <img className="cloud cloud-four" src={framerHeroAssets.cloudTwo} alt="" />
+      </div>
+    </div>
+  );
+}
+
+function LogoStrip() {
+  return (
+    <section className="logo-strip">
+      <p className="text-center text-sm font-black text-muted-foreground">
+        Trusted daily-wage categories across local hiring
+      </p>
+      <div className="logo-marquee mt-6">
+        <div className="logo-track">
+          {[...logoStrip, ...logoStrip].map((item, index) => (
+            <span key={`${item.label}-${index}`} className="logo-pill">
+              <item.icon className="logo-pill-icon" />
+              {item.label}
+            </span>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SectionHeader({
+  eyebrow,
+  title,
+  text,
+  align = "center",
+}: {
+  eyebrow: string;
+  title: string;
+  text: string;
+  align?: "center" | "left";
+}) {
+  return (
+    <div className={`section-header ${align === "left" ? "text-left" : "mx-auto text-center"}`}>
+      <p className="text-sm font-black uppercase tracking-[0.2em] text-primary">{eyebrow}</p>
+      <h2 className="mt-3 max-w-3xl text-4xl font-black leading-tight tracking-normal text-slate-950 sm:text-6xl">
+        {title}
+      </h2>
+      <p className="mt-5 max-w-2xl text-base font-semibold leading-7 text-muted-foreground">
+        {text}
+      </p>
+    </div>
+  );
+}
+
+function HeroFloatCard({
+  icon: Icon,
+  title,
+  text,
+  className = "",
+}: {
+  icon: LucideIcon;
+  title: string;
+  text: string;
+  className?: string;
+}) {
+  return (
+    <article className={`hero-float-card ${className}`}>
+      <div className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/10 text-primary">
+        <Icon className="h-5 w-5" />
+      </div>
+      <div>
+        <p className="text-sm font-black">{title}</p>
+        <p className="text-xs font-semibold text-muted-foreground">{text}</p>
+      </div>
+    </article>
+  );
+}
+
+function FeatureCard({
+  feature,
+  compact = false,
+  showcase = false,
+  category = false,
+}: {
+  feature: FeatureCard;
+  compact?: boolean;
+  showcase?: boolean;
+  category?: boolean;
+}) {
+  const Icon = feature.icon;
+  return (
+    <article
+      className={`zentivo-card ${compact ? "compact" : ""} ${showcase ? "showcase" : ""} ${category ? "category-card" : ""}`}
+    >
+      <div className="feature-icon">
+        <Icon className="h-6 w-6" />
+      </div>
+      <h3 className="mt-5 text-xl font-black">{feature.title}</h3>
+      <p className="mt-3 text-sm font-semibold leading-6 text-muted-foreground">{feature.text}</p>
+    </article>
+  );
+}
+
+function FooterColumn({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="footer-column">
+      <p>{title}</p>
+      <div>
+        {items.map((item) => (
+          <a key={item} href="#">
+            {item}
+          </a>
+        ))}
+      </div>
     </div>
   );
 }
@@ -405,127 +890,302 @@ function useLandingAnimations(demoMode: boolean) {
     const context = gsap.context(() => {
       gsap.set(
         [
-          ".hero-eyebrow",
-          ".hero-brand",
+          ".zentivo-nav-wrap",
           ".hero-title",
-          ".hero-subtext",
+          ".hero-subtitle",
           ".hero-actions",
-          ".demo-credentials",
-          ".hero-badges > *",
-          ".landing-phone",
-          ".phone-interactive-cue",
+          ".hero-device",
+          ".hero-assistant-card",
         ],
         { autoAlpha: 0 },
       );
 
       const hero = gsap.timeline({ defaults: { ease: "power3.out" } });
       hero
+        .fromTo(".zentivo-nav-wrap", { y: -18 }, { autoAlpha: 1, y: 0, duration: 0.55 })
         .fromTo(
-          ".hero-eyebrow",
-          { y: 18, scale: 0.96 },
-          { autoAlpha: 1, y: 0, scale: 1, duration: 0.55 },
-        )
-        .fromTo(".hero-brand", { y: 28 }, { autoAlpha: 1, y: 0, duration: 0.62 }, "-=0.28")
-        .fromTo(".hero-title", { y: 34 }, { autoAlpha: 1, y: 0, duration: 0.72 }, "-=0.36")
-        .fromTo(".hero-subtext", { y: 22 }, { autoAlpha: 1, y: 0, duration: 0.58 }, "-=0.35")
-        .fromTo(".hero-actions", { y: 18 }, { autoAlpha: 1, y: 0, duration: 0.5 }, "-=0.25")
-        .fromTo(
-          ".demo-credentials",
-          { y: 18, scale: 0.98 },
-          { autoAlpha: 1, y: 0, scale: 1, duration: 0.5 },
-          "-=0.2",
-        )
-        .fromTo(
-          ".hero-badges > *",
-          { y: 16, scale: 0.94 },
-          { autoAlpha: 1, y: 0, scale: 1, duration: 0.42, stagger: 0.055 },
+          ".hero-title",
+          { y: 34, scale: 0.88 },
+          { autoAlpha: 1, y: 0, scale: 1, duration: 0.78, ease: "back.out(1.18)" },
           "-=0.18",
         )
         .fromTo(
-          ".landing-phone",
-          { autoAlpha: 0 },
-          { autoAlpha: 1, duration: 0.6, ease: "power2.out" },
-          "-=0.72",
+          ".hero-subtitle",
+          { y: 24, scale: 0.94 },
+          { autoAlpha: 1, y: 0, scale: 1, duration: 0.62 },
+          "-=0.36",
         )
         .fromTo(
-          ".phone-interactive-cue",
-          { y: 12, scale: 0.96 },
-          { autoAlpha: 1, y: 0, scale: 1, duration: 0.45 },
-          "-=0.18",
+          ".hero-actions",
+          { y: 18 },
+          { autoAlpha: 1, y: 0, duration: 0.5 },
+          "-=0.26",
+        )
+        .fromTo(
+          ".hero-device",
+          { y: 42, scale: 0.92 },
+          { autoAlpha: 1, y: 0, scale: 1, duration: 0.8 },
+          "-=0.25",
+        )
+        .fromTo(
+          ".hero-assistant-card",
+          { y: 22, scale: 0.9 },
+          { autoAlpha: 1, y: 0, scale: 1, duration: 0.55, stagger: 0.08 },
+          "-=0.42",
         );
+
+      gsap.to(".cloud-one", {
+        x: 34,
+        y: -10,
+        duration: 10,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+      });
+      gsap.to(".cloud-two", {
+        x: -28,
+        y: 12,
+        duration: 12,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+      });
+      gsap.to(".cloud-three", {
+        x: 22,
+        y: 16,
+        duration: 11,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+      });
+
+      gsap.fromTo(
+        ".zentivo-hero .cloud-float-layer",
+        { y: 0 },
+        {
+          y: () => -Math.min(260, window.innerHeight * 0.28),
+          ease: "none",
+          scrollTrigger: {
+            trigger: ".zentivo-hero",
+            start: "top top",
+            end: "bottom top",
+            scrub: 1.15,
+            invalidateOnRefresh: true,
+          },
+        },
+      );
 
       gsap.utils.toArray<HTMLElement>(".section-header").forEach((header) => {
         gsap.fromTo(
           header.children,
-          { autoAlpha: 0, y: 26 },
+          { autoAlpha: 0, y: 28 },
           {
             autoAlpha: 1,
             y: 0,
             duration: 0.62,
             stagger: 0.08,
             ease: "power3.out",
-            scrollTrigger: { trigger: header, start: "top 82%" },
+            scrollTrigger: { trigger: header, start: "top 84%" },
           },
         );
       });
 
-      gsap.utils.toArray<HTMLElement>(".landing-card-grid").forEach((grid) => {
-        gsap.fromTo(
-          grid.children,
-          { autoAlpha: 0, y: 36, scale: 0.96 },
+      gsap.utils
+        .toArray<HTMLElement>(
+          ".zentivo-card, .step-card, .workspace-phone-visual, .growth-stat-card, .testimonial-card, .faq-row",
+        )
+        .forEach((card) => {
+          gsap.fromTo(
+            card,
+            { autoAlpha: 0, y: 38, scale: 0.965 },
+            {
+              autoAlpha: 1,
+              y: 0,
+              scale: 1,
+              duration: 0.58,
+              ease: "power3.out",
+              scrollTrigger: { trigger: card, start: "top 88%" },
+            },
+          );
+        });
+
+      gsap.fromTo(
+        ".workspace-copy",
+        { autoAlpha: 0, y: 52, scale: 0.96, transformOrigin: "left center" },
+        {
+          autoAlpha: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.9,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: ".workspace-copy",
+            start: "top 86%",
+            once: true,
+          },
+        },
+      );
+
+      gsap.fromTo(
+        ".workflow-timeline-panel, .growth-reference",
+        { autoAlpha: 0, y: 46, scale: 0.97 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.72,
+          ease: "power3.out",
+          stagger: 0.1,
+          scrollTrigger: { trigger: ".workflow-timeline-panel", start: "top 85%" },
+        },
+      );
+
+      gsap.utils.toArray<HTMLElement>(".growth-stat-value").forEach((value) => {
+        const target = Number(value.dataset.counterTarget ?? 0);
+        const suffix = value.dataset.counterSuffix ?? "";
+        const counter = { value: 0 };
+
+        value.textContent = `0${suffix}`;
+
+        gsap.to(counter, {
+          value: target,
+          duration: 1.65,
+          ease: "power2.out",
+          onUpdate: () => {
+            value.textContent = `${Math.round(counter.value)}${suffix}`;
+          },
+          onComplete: () => {
+            value.textContent = `${target}${suffix}`;
+          },
+          scrollTrigger: {
+            trigger: value.closest(".growth-stat-card") ?? value,
+            start: "top 86%",
+            once: true,
+          },
+        });
+      });
+
+      gsap.fromTo(
+        ".workflow-path",
+        { strokeDasharray: 1500, strokeDashoffset: 1500 },
+        {
+          strokeDashoffset: 0,
+          duration: 1.35,
+          ease: "power2.out",
+          scrollTrigger: { trigger: ".workflow-timeline-panel", start: "top 78%" },
+        },
+      );
+
+      const workflowStepTimeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: ".workflow-timeline-panel",
+          start: "top 76%",
+          once: true,
+        },
+      });
+
+      gsap.utils.toArray<HTMLElement>(".workflow-timeline-step").forEach((step, index) => {
+        const number = step.querySelector(":scope > span");
+        const copy = step.querySelector(":scope > div");
+        const position = index * 0.28;
+
+        workflowStepTimeline.fromTo(
+          number,
+          { autoAlpha: 0, y: 42, scale: 0.78, rotate: -4 },
           {
             autoAlpha: 1,
             y: 0,
             scale: 1,
-            duration: 0.58,
-            stagger: 0.07,
-            ease: "power3.out",
-            scrollTrigger: { trigger: grid, start: "top 84%" },
+            rotate: 0,
+            duration: 0.75,
+            ease: "back.out(1.4)",
           },
+          position,
+        );
+        workflowStepTimeline.fromTo(
+          copy,
+          { autoAlpha: 0, y: 30 },
+          { autoAlpha: 1, y: 0, duration: 0.65, ease: "power3.out" },
+          position + 0.12,
         );
       });
 
+      gsap.to(".orbit-line", {
+        rotate: 8,
+        duration: 5,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+      });
+
       gsap.fromTo(
-        ".ai-assistant-panel",
-        { autoAlpha: 0, y: 42, scale: 0.97 },
+        ".footer-top",
+        {
+          autoAlpha: 0,
+          y: 58,
+          scale: 0.9,
+          transformOrigin: "center top",
+        },
         {
           autoAlpha: 1,
           y: 0,
           scale: 1,
-          duration: 0.75,
-          ease: "power3.out",
-          scrollTrigger: { trigger: ".ai-assistant-panel", start: "top 84%" },
+          ease: "none",
+          scrollTrigger: {
+            trigger: ".footer-top",
+            start: "top 96%",
+            end: "top 72%",
+            scrub: 0.8,
+          },
         },
       );
 
       gsap.fromTo(
-        ".impact-panel",
-        { autoAlpha: 0, y: 42, scale: 0.97 },
+        ".footer-wordmark-letter",
+        { autoAlpha: 0, yPercent: 115 },
         {
           autoAlpha: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.75,
-          ease: "power3.out",
-          scrollTrigger: { trigger: ".impact-panel", start: "top 84%" },
+          yPercent: 0,
+          duration: 1.15,
+          stagger: 0.12,
+          ease: "power4.out",
+          scrollTrigger: {
+            trigger: ".footer-wordmark",
+            start: "top 92%",
+            once: true,
+          },
         },
       );
 
-      gsap.fromTo(
-        ".impact-stat",
-        { autoAlpha: 0, y: 22, scale: 0.94 },
-        {
-          autoAlpha: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.48,
-          stagger: 0.06,
-          ease: "back.out(1.4)",
-          scrollTrigger: { trigger: ".impact-panel", start: "top 76%" },
-        },
-      );
+      const footerFloatOffsets = [-10, -17, -8, -14];
+      const footerFloatDurations = [2.55, 3.1, 2.35, 2.85];
+      const footerFloatRotations = [-0.65, 0.8, -0.45, 0.6];
+
+      gsap.utils.toArray<HTMLElement>(".footer-wordmark-letter").forEach((letter, index) => {
+        gsap.to(letter, {
+          y: footerFloatOffsets[index],
+          rotate: footerFloatRotations[index],
+          duration: footerFloatDurations[index],
+          delay: index * 0.14,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+          scrollTrigger: {
+            trigger: ".footer-wordmark",
+            start: "top bottom",
+            end: "bottom top",
+            toggleActions: "play pause resume pause",
+          },
+        });
+      });
     });
 
     return () => context.revert();
   }, [demoMode]);
 }
+
+type FeatureCard = {
+  icon: LucideIcon;
+  title: string;
+  text: string;
+};

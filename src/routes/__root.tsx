@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LanguageProvider } from "../lib/i18n";
 import { RagChatbot } from "../components/RagChatbot";
+import { SmoothScroll } from "../components/SmoothScroll";
 
 function NotFoundComponent() {
   return (
@@ -76,7 +77,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800;900&display=swap",
       },
     ],
   }),
@@ -104,11 +105,13 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <Outlet />
-        <RagChatbot />
-        <Toaster position="top-center" richColors />
-      </LanguageProvider>
+      <SmoothScroll>
+        <LanguageProvider>
+          <Outlet />
+          <RagChatbot />
+          <Toaster position="top-center" richColors />
+        </LanguageProvider>
+      </SmoothScroll>
     </QueryClientProvider>
   );
 }

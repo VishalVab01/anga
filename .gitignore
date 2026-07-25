@@ -16,6 +16,7 @@ dist-mobile
 .tanstack/**
 .nitro
 .tooling/
+.codex-reference/
 *.apk
 *.local
 .env
