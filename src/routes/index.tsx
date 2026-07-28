@@ -1024,13 +1024,13 @@ function useLandingAnimations(demoMode: boolean) {
         });
 
       gsap.fromTo(
-        ".workspace-copy",
-        { autoAlpha: 0, y: 52, scale: 0.96, transformOrigin: "left center" },
+        ".workspace-copy > h2, .workspace-copy > p",
+        { autoAlpha: 0, y: 34 },
         {
           autoAlpha: 1,
           y: 0,
-          scale: 1,
-          duration: 0.9,
+          duration: 0.72,
+          stagger: 0.12,
           ease: "power3.out",
           scrollTrigger: {
             trigger: ".workspace-copy",
@@ -1039,6 +1039,23 @@ function useLandingAnimations(demoMode: boolean) {
           },
         },
       );
+
+      gsap.set(".workspace-line", { autoAlpha: 0, x: -18, y: 34 });
+      gsap.to(".workspace-line", {
+        autoAlpha: 1,
+        x: 0,
+        y: 0,
+        duration: 1,
+        stagger: 0.7,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: ".workspace-list",
+          start: "top 88%",
+          end: "bottom 58%",
+          scrub: 0.65,
+          invalidateOnRefresh: true,
+        },
+      });
 
       gsap.fromTo(
         ".workflow-timeline-panel, .growth-reference",
