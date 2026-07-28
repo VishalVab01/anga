@@ -3,6 +3,7 @@ import { Bot, Loader2, Mic, Plus, Search, Send, Sparkles, Volume2 } from "lucide
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { BottomNav } from "@/components/BottomNav";
+import { SearchResultsSkeleton } from "@/components/AppLoadingSkeletons";
 import { PageShell } from "@/components/PageShell";
 import { api, type ApiJob, type ApiWorkerProfile } from "@/lib/api";
 import {
@@ -267,7 +268,7 @@ function WorkerResults({
     <section>
       <h3 className="mb-3 font-bold">{t("matchingJobs")}</h3>
       <div className="space-y-3">
-        {loading && <EmptyText text="Finding jobs..." />}
+        {loading && <SearchResultsSkeleton />}
         {!loading && !hasLive && fallbackJobs.length === 0 && (
           <EmptyText text={lang === "hi" ? "काम नहीं मिला" : "No jobs found"} />
         )}
@@ -338,7 +339,7 @@ function CustomerResults({
         </button>
       </div>
       <div className="space-y-3">
-        {loading && <EmptyText text="Finding workers..." />}
+        {loading && <SearchResultsSkeleton />}
         {!loading && !hasLive && fallback.length === 0 && (
           <EmptyText text={lang === "hi" ? "मजदूर नहीं मिले" : "No workers found"} />
         )}

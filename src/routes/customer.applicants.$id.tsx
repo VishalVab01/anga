@@ -2,7 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { BadgeCheck, FileCheck, Phone, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { CardListSkeleton } from "@/components/AppLoadingSkeletons";
 import { PageShell } from "@/components/PageShell";
+import { Skeleton } from "@/components/ui/skeleton";
 import { api, type ApiWorkerProfile } from "@/lib/api";
 import { serviceName } from "@/lib/data";
 import { useT } from "@/lib/i18n";
@@ -51,14 +53,26 @@ function Applicants() {
     <PageShell title={t("viewApplicants")} back="/customer/my-requests">
       <div className="space-y-4">
         <div className="card-soft bg-primary/5 p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-primary">
-            {service ? serviceName(service, lang) : t("applicants")}
-          </p>
-          <h2 className="mt-1 text-lg font-extrabold">{jobTitle || "Posted job"}</h2>
-          <p className="text-sm text-muted-foreground">
-            {loading ? "Loading..." : `${applicants.length} ${t("applicants")}`}
-          </p>
+          {loading ? (
+            <div className="space-y-2" aria-label="Loading applicants" aria-busy="true">
+              <Skeleton className="h-3 w-20 rounded-full" />
+              <Skeleton className="h-5 w-3/4 rounded-full" />
+              <Skeleton className="h-3 w-28 rounded-full" />
+            </div>
+          ) : (
+            <>
+              <p className="text-xs font-bold uppercase tracking-wide text-primary">
+                {service ? serviceName(service, lang) : t("applicants")}
+              </p>
+              <h2 className="mt-1 text-lg font-extrabold">{jobTitle || "Posted job"}</h2>
+              <p className="text-sm text-muted-foreground">
+                {applicants.length} {t("applicants")}
+              </p>
+            </>
+          )}
         </div>
+
+        {loading && <CardListSkeleton count={3} />}
 
         {error && (
           <p className="rounded-2xl bg-destructive/10 p-4 text-center text-sm font-semibold text-destructive">

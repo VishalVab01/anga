@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bot, MapPin, Plus, Search, ShieldCheck, Star, Users, Wallet } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
+import { CardListSkeleton } from "@/components/AppLoadingSkeletons";
 import { PageShell } from "@/components/PageShell";
 import { api, type ApiWorkerProfile } from "@/lib/api";
 import { serviceName, services, workers } from "@/lib/data";
@@ -182,11 +183,7 @@ function CustomerHome() {
           </div>
 
           <div className="space-y-3">
-            {loadingWorkers && (
-              <p className="rounded-2xl bg-muted p-4 text-center text-sm text-muted-foreground">
-                Loading workers...
-              </p>
-            )}
+            {loadingWorkers && <CardListSkeleton count={3} />}
             {!loadingWorkers &&
               trustedWorkers
                 .slice(0, 4)

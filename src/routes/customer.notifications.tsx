@@ -3,6 +3,7 @@ import { Bell, CheckCircle2, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { BottomNav } from "@/components/BottomNav";
+import { NotificationListSkeleton } from "@/components/AppLoadingSkeletons";
 import { PageShell } from "@/components/PageShell";
 import { api, type ApiNotification } from "@/lib/api";
 import { useT } from "@/lib/i18n";
@@ -58,11 +59,7 @@ function Notifs() {
             {lang === "hi" ? "सभी पढ़ें" : "Mark all read"}
           </button>
         )}
-        {loading && (
-          <p className="rounded-2xl bg-muted p-6 text-center text-sm text-muted-foreground">
-            Loading notifications...
-          </p>
-        )}
+        {loading && <NotificationListSkeleton />}
         {!loading && items.length === 0 && (
           <p className="rounded-2xl bg-muted p-6 text-center text-sm text-muted-foreground">
             {t("noNotifications")}

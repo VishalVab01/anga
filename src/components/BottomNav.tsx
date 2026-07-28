@@ -26,8 +26,8 @@ export function BottomNav({ role }: { role: "worker" | "customer" }) {
         ];
 
   return (
-    <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-border bg-card/95 shadow-[0_-12px_30px_-24px_rgba(15,23,42,0.55)] backdrop-blur">
-      <div className="flex items-stretch justify-around px-2 py-2">
+    <nav className="fixed bottom-[max(0.65rem,env(safe-area-inset-bottom))] left-1/2 z-40 w-[calc(100%-2.25rem)] max-w-[25.5rem] -translate-x-1/2 overflow-hidden rounded-[2rem] border border-border bg-card/95 shadow-[0_14px_38px_-16px_rgba(15,23,42,0.45)] backdrop-blur">
+      <div className="flex items-stretch justify-around px-1.5 py-1">
         {items.map((it) => {
           const active = pathname === it.to;
           const Icon = it.icon;
@@ -35,11 +35,11 @@ export function BottomNav({ role }: { role: "worker" | "customer" }) {
             <Link
               key={it.to}
               to={it.to}
-              className={`flex flex-1 flex-col items-center gap-1 rounded-xl py-2 text-xs font-medium transition-colors ${
+              className={`flex flex-1 flex-col items-center gap-0.5 rounded-[1.25rem] py-1.5 text-[11px] font-medium transition-colors ${
                 active ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              <Icon className={`h-6 w-6 ${active ? "stroke-[2.5]" : ""}`} />
+              <Icon className={`h-[1.35rem] w-[1.35rem] ${active ? "stroke-[2.5]" : ""}`} />
               <span className="truncate">{it.label}</span>
             </Link>
           );

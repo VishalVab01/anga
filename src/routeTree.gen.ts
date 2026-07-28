@@ -27,8 +27,10 @@ import { Route as CustomerRequestRouteImport } from './routes/customer.request'
 import { Route as CustomerProfileRouteImport } from './routes/customer.profile'
 import { Route as CustomerNotificationsRouteImport } from './routes/customer.notifications'
 import { Route as CustomerMyRequestsRouteImport } from './routes/customer.my-requests'
+import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as AuthPhoneRouteImport } from './routes/auth.phone'
 import { Route as AuthOtpRouteImport } from './routes/auth.otp'
+import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as WorkerJobIdRouteImport } from './routes/worker.job.$id'
 import { Route as CustomerWorkerIdRouteImport } from './routes/customer.worker.$id'
 import { Route as CustomerServiceSlugRouteImport } from './routes/customer.service.$slug'
@@ -124,6 +126,11 @@ const CustomerMyRequestsRoute = CustomerMyRequestsRouteImport.update({
   path: '/customer/my-requests',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthSignupRoute = AuthSignupRouteImport.update({
+  id: '/auth/signup',
+  path: '/auth/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthPhoneRoute = AuthPhoneRouteImport.update({
   id: '/auth/phone',
   path: '/auth/phone',
@@ -132,6 +139,11 @@ const AuthPhoneRoute = AuthPhoneRouteImport.update({
 const AuthOtpRoute = AuthOtpRouteImport.update({
   id: '/auth/otp',
   path: '/auth/otp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WorkerJobIdRoute = WorkerJobIdRouteImport.update({
@@ -162,8 +174,10 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/role-selection': typeof RoleSelectionRoute
   '/signup': typeof SignupRoute
+  '/auth/login': typeof AuthLoginRoute
   '/auth/otp': typeof AuthOtpRoute
   '/auth/phone': typeof AuthPhoneRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/customer/my-requests': typeof CustomerMyRequestsRoute
   '/customer/notifications': typeof CustomerNotificationsRoute
   '/customer/profile': typeof CustomerProfileRoute
@@ -188,8 +202,10 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/role-selection': typeof RoleSelectionRoute
   '/signup': typeof SignupRoute
+  '/auth/login': typeof AuthLoginRoute
   '/auth/otp': typeof AuthOtpRoute
   '/auth/phone': typeof AuthPhoneRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/customer/my-requests': typeof CustomerMyRequestsRoute
   '/customer/notifications': typeof CustomerNotificationsRoute
   '/customer/profile': typeof CustomerProfileRoute
@@ -215,8 +231,10 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/role-selection': typeof RoleSelectionRoute
   '/signup': typeof SignupRoute
+  '/auth/login': typeof AuthLoginRoute
   '/auth/otp': typeof AuthOtpRoute
   '/auth/phone': typeof AuthPhoneRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/customer/my-requests': typeof CustomerMyRequestsRoute
   '/customer/notifications': typeof CustomerNotificationsRoute
   '/customer/profile': typeof CustomerProfileRoute
@@ -243,8 +261,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/role-selection'
     | '/signup'
+    | '/auth/login'
     | '/auth/otp'
     | '/auth/phone'
+    | '/auth/signup'
     | '/customer/my-requests'
     | '/customer/notifications'
     | '/customer/profile'
@@ -269,8 +289,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/role-selection'
     | '/signup'
+    | '/auth/login'
     | '/auth/otp'
     | '/auth/phone'
+    | '/auth/signup'
     | '/customer/my-requests'
     | '/customer/notifications'
     | '/customer/profile'
@@ -295,8 +317,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/role-selection'
     | '/signup'
+    | '/auth/login'
     | '/auth/otp'
     | '/auth/phone'
+    | '/auth/signup'
     | '/customer/my-requests'
     | '/customer/notifications'
     | '/customer/profile'
@@ -322,8 +346,10 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RoleSelectionRoute: typeof RoleSelectionRoute
   SignupRoute: typeof SignupRoute
+  AuthLoginRoute: typeof AuthLoginRoute
   AuthOtpRoute: typeof AuthOtpRoute
   AuthPhoneRoute: typeof AuthPhoneRoute
+  AuthSignupRoute: typeof AuthSignupRoute
   CustomerMyRequestsRoute: typeof CustomerMyRequestsRoute
   CustomerNotificationsRoute: typeof CustomerNotificationsRoute
   CustomerProfileRoute: typeof CustomerProfileRoute
@@ -470,6 +496,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomerMyRequestsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/signup': {
+      id: '/auth/signup'
+      path: '/auth/signup'
+      fullPath: '/auth/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/phone': {
       id: '/auth/phone'
       path: '/auth/phone'
@@ -482,6 +515,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/otp'
       fullPath: '/auth/otp'
       preLoaderRoute: typeof AuthOtpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/worker/job/$id': {
@@ -522,8 +562,10 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RoleSelectionRoute: RoleSelectionRoute,
   SignupRoute: SignupRoute,
+  AuthLoginRoute: AuthLoginRoute,
   AuthOtpRoute: AuthOtpRoute,
   AuthPhoneRoute: AuthPhoneRoute,
+  AuthSignupRoute: AuthSignupRoute,
   CustomerMyRequestsRoute: CustomerMyRequestsRoute,
   CustomerNotificationsRoute: CustomerNotificationsRoute,
   CustomerProfileRoute: CustomerProfileRoute,

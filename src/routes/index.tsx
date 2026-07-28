@@ -245,7 +245,7 @@ function Landing() {
 
   if (demoMode) {
     return (
-      <main className="landing-demo-stage min-h-screen bg-background">
+      <main className="landing-demo-stage min-h-screen">
         <button
           type="button"
           onClick={() => setDemoMode(false)}
@@ -255,12 +255,31 @@ function Landing() {
           <ArrowLeft className="h-4 w-4" />
           Back to home
         </button>
-        <iframe
-          src="/app"
-          title="interactive Anga app demo"
-          className="demo-app-viewport"
-          loading="eager"
-        />
+        <div className="demo-phone-mockup">
+          <img
+            src="/demo/iphone-front-mockup.jpg"
+            alt=""
+            className="demo-phone-frame"
+            aria-hidden="true"
+          />
+          <div className="demo-phone-screen">
+            <div className="demo-phone-status-bar" aria-hidden="true">
+              <span className="demo-phone-status-time">9:41</span>
+              <span className="demo-phone-status-icons">
+                <Signal />
+                <Wifi />
+                <BatteryMedium />
+              </span>
+            </div>
+            <iframe
+              src="/app"
+              title="interactive Anga app demo"
+              className="demo-app-viewport"
+              loading="eager"
+            />
+            <span className="demo-phone-island" aria-hidden="true" />
+          </div>
+        </div>
       </main>
     );
   }
@@ -915,12 +934,7 @@ function useLandingAnimations(demoMode: boolean) {
           { autoAlpha: 1, y: 0, scale: 1, duration: 0.62 },
           "-=0.36",
         )
-        .fromTo(
-          ".hero-actions",
-          { y: 18 },
-          { autoAlpha: 1, y: 0, duration: 0.5 },
-          "-=0.26",
-        )
+        .fromTo(".hero-actions", { y: 18 }, { autoAlpha: 1, y: 0, duration: 0.5 }, "-=0.26")
         .fromTo(
           ".hero-device",
           { y: 42, scale: 0.92 },
@@ -1146,14 +1160,13 @@ function useLandingAnimations(demoMode: boolean) {
         {
           autoAlpha: 1,
           yPercent: 0,
-          stagger: 0.16,
-          ease: "power3.out",
+          duration: 1.15,
+          stagger: 0.12,
+          ease: "power4.out",
           scrollTrigger: {
             trigger: ".footer-wordmark",
-            start: "top 98%",
-            end: "top 48%",
-            scrub: 1.5,
-            invalidateOnRefresh: true,
+            start: "top 92%",
+            once: true,
           },
         },
       );

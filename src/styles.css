@@ -37,7 +37,7 @@
 
 :root {
   --radius: 1rem;
-  --background: #f7f3e9;
+  --background: #f3f3f3;
   --foreground: #1f2937;
   --card: #ffffff;
   --card-foreground: #1f2937;
@@ -199,7 +199,7 @@
     place-items: center;
     overflow: hidden;
     padding: 0;
-    background: var(--color-background);
+    background: #fff;
   }
 
   .demo-back-button {
@@ -233,6 +233,105 @@
     border-color: oklch(0.55 0.21 265 / 0.28);
     background: var(--color-card);
     outline: none;
+  }
+
+  .demo-phone-mockup {
+    position: relative;
+    width: min(45dvh, 430px, 92vw);
+    flex: none;
+    aspect-ratio: 1881 / 3877;
+    animation: demoPhoneFocus 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .demo-phone-frame {
+    position: absolute;
+    left: -82.88%;
+    top: -14.47%;
+    z-index: 1;
+    display: block;
+    width: 265.82%;
+    height: 128.97%;
+    max-width: none;
+    object-fit: fill;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .demo-phone-screen {
+    position: absolute;
+    left: 2.98%;
+    top: 1.03%;
+    z-index: 2;
+    width: 94.47%;
+    height: 97.96%;
+    overflow: hidden;
+    border-radius: 8.5% / 4%;
+    background: var(--color-background);
+    box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.14);
+  }
+
+  .demo-phone-status-bar {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 3;
+    display: flex;
+    height: 6.4%;
+    align-items: center;
+    justify-content: space-between;
+    background: oklch(1 0 0 / 0.96);
+    padding: 0.2rem 6.5% 0;
+    color: #090b10;
+    backdrop-filter: blur(14px);
+    pointer-events: none;
+  }
+
+  .demo-phone-status-time {
+    font-size: clamp(0.58rem, 1.35dvh, 0.75rem);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .demo-phone-status-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.22rem;
+  }
+
+  .demo-phone-status-icons svg {
+    width: clamp(0.65rem, 1.55dvh, 0.84rem);
+    height: auto;
+    stroke-width: 2.5;
+  }
+
+  .demo-phone-island {
+    position: absolute;
+    left: 38.3%;
+    top: 1.03%;
+    z-index: 4;
+    width: 23%;
+    height: 3.61%;
+    min-height: 1rem;
+    border-radius: 999px;
+    background: #000;
+    box-shadow:
+      inset 0 0 0 1px oklch(1 0 0 / 0.08),
+      0 1px 4px oklch(0 0 0 / 0.3);
+    pointer-events: none;
+  }
+
+  .demo-phone-island::after {
+    content: "";
+    position: absolute;
+    right: 9%;
+    top: 50%;
+    width: 9%;
+    aspect-ratio: 1;
+    border-radius: 999px;
+    background: radial-gradient(circle at 60% 38%, #2373ff 0 16%, #0b1931 24% 57%, #02040a 66%);
+    box-shadow: 0 0 0 1px oklch(1 0 0 / 0.08);
+    transform: translateY(-50%);
   }
 
   .phone-shell {
@@ -434,20 +533,17 @@
   }
 
   .demo-app-viewport {
+    position: absolute;
+    inset: 6.4% 0 0;
     display: block;
-    width: min(390px, 100vw, calc(100dvh * 0.4621));
-    height: auto;
-    max-height: 100dvh;
-    aspect-ratio: 390 / 844;
+    width: 100%;
+    height: 93.6%;
     box-sizing: border-box;
     overflow: hidden;
     border: 0;
-    border-right: 1px solid #cfd6e2;
-    border-left: 1px solid #cfd6e2;
     border-radius: 0;
     background: var(--color-background);
     box-shadow: none;
-    animation: demoPhoneFocus 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .zentivo-landing {
@@ -2295,6 +2391,107 @@
   .anga-app-shell * {
     scrollbar-width: none;
     -ms-overflow-style: none;
+    font-weight: 400 !important;
+  }
+
+  .anga-app-shell .onboarding-heading,
+  .anga-app-shell .auth-heading,
+  .anga-app-shell .auth-brand,
+  .anga-app-shell .role-brand,
+  .anga-app-shell .role-heading,
+  .anga-app-shell .role-card-title,
+  .anga-app-shell .app-page-title,
+  .anga-app-shell .worker-profile-name,
+  .anga-app-shell .worker-hero-copy,
+  .anga-app-shell .worker-section-title,
+  .anga-app-shell .worker-card-title {
+    font-weight: 700 !important;
+  }
+
+  .app-splash {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .app-splash-glow {
+    position: absolute;
+    width: min(72vw, 18rem);
+    aspect-ratio: 1;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgb(45 103 235 / 16%) 0%, rgb(45 103 235 / 0%) 70%);
+    animation: app-splash-glow 2.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .app-splash-word {
+    z-index: 1;
+    animation: app-splash-word 2.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+    will-change: opacity, transform, filter;
+  }
+
+  .app-onboarding-enter {
+    animation: app-onboarding-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes app-splash-word {
+    0% {
+      opacity: 0;
+      filter: blur(8px);
+      transform: scale(0.92) translateY(6px);
+    }
+    24%,
+    68% {
+      opacity: 1;
+      filter: blur(0);
+      transform: scale(1) translateY(0);
+    }
+    100% {
+      opacity: 0;
+      filter: blur(4px);
+      transform: scale(1.045) translateY(-3px);
+    }
+  }
+
+  @keyframes app-splash-glow {
+    0%,
+    100% {
+      opacity: 0;
+      transform: scale(0.78);
+    }
+    32%,
+    70% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes app-onboarding-enter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .app-splash-word,
+    .app-splash-glow,
+    .app-onboarding-enter {
+      animation: none;
+    }
+
+    .app-splash-word {
+      opacity: 1;
+      filter: none;
+      transform: none;
+    }
+
+    .app-splash-glow {
+      opacity: 0.45;
+      transform: none;
+    }
   }
 
   .anga-app-shell::-webkit-scrollbar,

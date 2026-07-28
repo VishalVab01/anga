@@ -1,5 +1,6 @@
 import { MapPin, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type LocationAutocompleteProps = {
   name: string;
@@ -90,7 +91,22 @@ export function LocationAutocomplete({
         />
       </div>
 
-      {open && (
+      {loading && value.trim().length >= 2 && (
+        <div
+          className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 space-y-3 rounded-2xl border border-border bg-card p-4 shadow-2xl shadow-slate-900/10"
+          aria-label="Loading locations"
+          aria-busy="true"
+        >
+          {["first", "second", "third"].map((item) => (
+            <div key={item} className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
+              <Skeleton className="h-4 flex-1 rounded-full" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!loading && open && (
         <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-slate-900/10">
           {suggestions.map((suggestion) => (
             <button
@@ -107,10 +123,6 @@ export function LocationAutocomplete({
             </button>
           ))}
         </div>
-      )}
-
-      {loading && value.trim().length >= 2 && (
-        <div className="pointer-events-none absolute right-4 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-primary/60" />
       )}
     </div>
   );

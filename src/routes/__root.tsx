@@ -13,7 +13,6 @@ import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LanguageProvider } from "../lib/i18n";
-import { RagChatbot } from "../components/RagChatbot";
 import { SmoothScroll } from "../components/SmoothScroll";
 
 function NotFoundComponent() {
@@ -108,7 +107,6 @@ function RootComponent() {
       <SmoothScroll>
         <LanguageProvider>
           <Outlet />
-          <RagChatbot />
           <Toaster position="top-center" richColors />
         </LanguageProvider>
       </SmoothScroll>

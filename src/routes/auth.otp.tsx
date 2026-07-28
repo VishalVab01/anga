@@ -87,7 +87,7 @@ function OtpScreen() {
   };
 
   return (
-    <main className="min-h-screen overflow-hidden bg-background">
+    <main className="anga-app-shell min-h-screen overflow-hidden bg-background">
       <form
         onSubmit={submit}
         className="mx-auto flex min-h-screen max-w-md flex-col px-6 pb-8 pt-7"

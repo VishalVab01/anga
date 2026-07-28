@@ -3,6 +3,7 @@ import { CheckCircle2, Eye, Loader2, Trash2, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { BottomNav } from "@/components/BottomNav";
+import { CardListSkeleton } from "@/components/AppLoadingSkeletons";
 import { PageShell } from "@/components/PageShell";
 import { api, type ApiJob } from "@/lib/api";
 import { seedRequests, services } from "@/lib/data";
@@ -44,11 +45,7 @@ function MyRequests() {
   return (
     <PageShell title={t("myRequests")} back="/customer" bottomNav={<BottomNav role="customer" />}>
       <div className="space-y-3">
-        {loading && (
-          <p className="rounded-2xl bg-muted p-6 text-center text-sm text-muted-foreground">
-            Loading requests...
-          </p>
-        )}
+        {loading && <CardListSkeleton count={4} />}
         {!loading && !hasRequests && (
           <div className="rounded-[1.5rem] border border-dashed border-primary/25 bg-card p-6 text-center">
             <p className="text-sm font-semibold text-muted-foreground">

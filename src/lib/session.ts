@@ -1,10 +1,12 @@
 export type Role = "worker" | "customer";
 export type AuthMode = "signup" | "login";
+export type AuthMethod = "credentials" | "mobile";
 
 const keys = {
   role: "rozgaar.role",
   phone: "rozgaar.phone",
   mode: "rozgaar.authMode",
+  method: "anga.authMethod",
   token: "anga.token",
   workerProfile: "rozgaar.workerProfile",
   customerProfile: "rozgaar.customerProfile",
@@ -19,6 +21,15 @@ export function setAuthMode(mode: AuthMode) {
 export function getAuthMode(): AuthMode {
   if (typeof window === "undefined") return "signup";
   return localStorage.getItem(keys.mode) === "login" ? "login" : "signup";
+}
+
+export function setAuthMethod(method: AuthMethod) {
+  if (typeof window !== "undefined") localStorage.setItem(keys.method, method);
+}
+
+export function getAuthMethod(): AuthMethod {
+  if (typeof window === "undefined") return "credentials";
+  return localStorage.getItem(keys.method) === "mobile" ? "mobile" : "credentials";
 }
 
 export function setRole(role: Role) {
@@ -54,6 +65,7 @@ export function logoutLocal() {
   localStorage.removeItem(keys.token);
   localStorage.removeItem(keys.role);
   localStorage.removeItem(keys.phone);
+  localStorage.removeItem(keys.method);
   localStorage.removeItem(keys.workerProfileComplete);
   localStorage.removeItem(keys.customerProfileComplete);
 }
