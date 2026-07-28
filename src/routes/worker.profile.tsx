@@ -15,6 +15,7 @@ import {
   MapPin,
   Pencil,
   Phone,
+  RefreshCw,
   ShieldAlert,
   ShieldCheck,
   Star,
@@ -23,12 +24,13 @@ import {
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import defaultWorkerProfileImage from "@/assets/profile/construction-worker.png";
+import { ProfilePageSkeleton } from "@/components/AppLoadingSkeletons";
 import { BottomNav } from "@/components/BottomNav";
 import { PageShell } from "@/components/PageShell";
 import { api, type ApiWorkerProfile } from "@/lib/api";
 import { serviceName } from "@/lib/data";
 import { useT, type Lang } from "@/lib/i18n";
-import { getProfile, logoutLocal } from "@/lib/session";
+import { logoutLocal } from "@/lib/session";
 
 export const Route = createFileRoute("/worker/profile")({
   head: () => ({ meta: [{ title: "Anga - Profile" }] }),
@@ -39,18 +41,36 @@ function Profile() {
   const { t, lang } = useT();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ApiWorkerProfile | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [profileError, setProfileError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    const cachedProfile = getProfile("worker");
-    if (cachedProfile) setProfile(profileFromCache(cachedProfile));
+    let active = true;
+    setLoadingProfile(true);
+    setProfileError("");
 
     api
       .profile()
-      .then((result) => setProfile(result.profile as ApiWorkerProfile | null))
-      .catch(() => {
-        // Cached onboarding data keeps profile useful during API cold starts.
+      .then((result) => {
+        if (!active) return;
+        const workerProfile = result.profile as ApiWorkerProfile | null;
+        setProfile(workerProfile);
+        if (!workerProfile) setProfileError("Your worker profile has not been completed yet.");
+      })
+      .catch((error) => {
+        if (!active) return;
+        setProfile(null);
+        setProfileError(error instanceof Error ? error.message : "Could not load your profile.");
+      })
+      .finally(() => {
+        if (active) setLoadingProfile(false);
       });
-  }, []);
+
+    return () => {
+      active = false;
+    };
+  }, [reloadKey]);
 
   const completion = useMemo(() => getProfileCompletion(profile), [profile]);
   const skills = profile?.skills?.length
@@ -58,13 +78,52 @@ function Profile() {
     : "Add skills";
   const isVerified = Boolean(profile?.verified);
   const hasDocuments = Boolean(profile?.documentsUploaded);
-  const availableToday = profile?.availableToday ?? true;
+  const availableToday = Boolean(profile?.availableToday);
 
   const logout = () => {
     logoutLocal();
     toast.success("Logged out");
     navigate({ to: "/login" });
   };
+
+  if (loadingProfile) {
+    return (
+      <PageShell title={t("profile")} back="/worker" bottomNav={<BottomNav role="worker" />}>
+        <ProfilePageSkeleton />
+      </PageShell>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <PageShell title={t("profile")} back="/worker" bottomNav={<BottomNav role="worker" />}>
+        <section className="mt-5 rounded-[1.75rem] border border-border bg-card p-6 text-center shadow-sm">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-primary">
+            <RefreshCw className="h-6 w-6" />
+          </div>
+          <h2 className="mt-4 text-lg font-black">Profile unavailable</h2>
+          <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-muted-foreground">
+            {profileError || "We could not load your worker profile."}
+          </p>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setReloadKey((value) => value + 1)}
+              className="min-h-11 rounded-full border border-primary bg-card px-4 text-sm text-primary"
+            >
+              Try again
+            </button>
+            <Link
+              to="/worker/setup"
+              className="grid min-h-11 place-items-center rounded-full bg-primary px-4 text-sm text-primary-foreground"
+            >
+              Set up profile
+            </Link>
+          </div>
+        </section>
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell title={t("profile")} back="/worker" bottomNav={<BottomNav role="worker" />}>
@@ -74,14 +133,12 @@ function Profile() {
           <div className="relative flex items-start gap-4">
             <img
               src={profile?.photoUrl || defaultWorkerProfileImage}
-              alt={profile?.name ? `${profile.name} profile photo` : "Worker profile photo"}
+              alt={`${profile.name} profile photo`}
               className="h-20 w-20 shrink-0 rounded-[1.7rem] border-4 border-white/35 bg-white object-cover shadow-xl"
             />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="truncate text-2xl font-black leading-tight">
-                  {profile?.name || "Worker"}
-                </h2>
+                <h2 className="truncate text-2xl font-black leading-tight">{profile.name}</h2>
                 {isVerified && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-white/18 px-2 py-1 text-[10px] font-black uppercase">
                     <BadgeCheck className="h-3.5 w-3.5" />
@@ -91,13 +148,13 @@ function Profile() {
               </div>
               <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-primary-foreground/82">
                 <Star className="h-4 w-4 fill-amber-300 text-amber-300" />
-                {profile?.rating ?? 4.5} rating
+                {profile.rating} rating
                 <span className="opacity-60">·</span>
-                {profile?.totalJobsCompleted ?? 0} jobs done
+                {profile.totalJobsCompleted} jobs done
               </p>
               <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-primary-foreground/75">
                 <MapPin className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{profile?.location || "Add your area"}</span>
+                <span className="truncate">{profile.location || "Location not added"}</span>
               </p>
             </div>
           </div>
@@ -129,12 +186,12 @@ function Profile() {
           <MiniStat
             icon={<Wallet className="h-4 w-4" />}
             label="Daily wage"
-            value={profile ? `₹${profile.expectedWage}` : "-"}
+            value={`₹${profile.expectedWage}`}
           />
           <MiniStat
             icon={<BriefcaseBusiness className="h-4 w-4" />}
             label="Experience"
-            value={profile?.experience || "-"}
+            value={profile.experience || "Not added"}
           />
           <MiniStat
             icon={<ShieldCheck className="h-4 w-4" />}
@@ -145,10 +202,10 @@ function Profile() {
 
         <section className="rounded-[1.5rem] border border-border bg-card shadow-sm">
           <DetailRow label={t("skills")} value={skills} />
-          <DetailRow label={t("phone")} value={profile?.phone || "-"} icon={<Phone />} />
+          <DetailRow label={t("phone")} value={profile.phone || "Not added"} icon={<Phone />} />
           <DetailRow
             label={t("location")}
-            value={profile?.location || "-"}
+            value={profile.location || "Not added"}
             icon={<MapPin />}
             last
           />
@@ -165,7 +222,7 @@ function Profile() {
             icon={<FileUp />}
             title={t("uploadDocs")}
             text={hasDocuments ? "Documents uploaded" : "Add ID for trust"}
-            onClick={() => toast.success(t("documentUploaded"))}
+            to="/worker/setup"
           />
           <ActionTile
             icon={<Bookmark />}
@@ -192,18 +249,20 @@ function Profile() {
                 : "Complete document upload to unlock verified badge."
             }
             badge={isVerified ? "Verified" : "Pending"}
+            to="/worker/setup"
           />
           <OptionRow
             icon={<FileCheck />}
             title="Documents"
             text={hasDocuments ? "ID/document uploaded" : "Upload optional ID proof"}
             badge={hasDocuments ? "Uploaded" : "Needed"}
+            to="/worker/setup"
           />
           <OptionRow
             icon={<CreditCard />}
             title="Payment preferences"
             text="Cash, UPI and daily wage clarity"
-            onClick={() => toast.message("Payment settings coming soon")}
+            to="/settings/preferences"
           />
           <OptionRow
             icon={<Bell />}
@@ -219,7 +278,7 @@ function Profile() {
             icon={<ShieldAlert />}
             title={t("reportIssue")}
             text="Report job, customer or payment issues"
-            onClick={() => toast(t("reportIssue"))}
+            to="/assistant"
           />
           <OptionRow
             icon={<LifeBuoy />}
@@ -231,7 +290,7 @@ function Profile() {
             icon={<Languages />}
             title="Language"
             text="Hindi and English support"
-            onClick={() => toast.message("Use the language toggle on the welcome screen")}
+            to="/settings/preferences"
           />
           <OptionRow
             icon={<CircleHelp />}
@@ -400,24 +459,4 @@ function getProfileCompletion(profile: ApiWorkerProfile | null) {
     Boolean(profile.documentsUploaded),
   ];
   return Math.round((checks.filter(Boolean).length / checks.length) * 100);
-}
-
-function profileFromCache(profile: Record<string, unknown>): ApiWorkerProfile {
-  return {
-    _id: "",
-    userId: "",
-    name: String(profile.name || ""),
-    phone: String(profile.phone || ""),
-    skills: Array.isArray(profile.skills) ? profile.skills.map(String) : [],
-    experience: String(profile.experience || ""),
-    expectedWage: Number(profile.expectedWage || 0),
-    availableToday: Boolean(profile.availableToday ?? true),
-    preferredDistance: String(profile.preferredDistance || "5 km"),
-    location: String(profile.location || profile.area || ""),
-    photoUrl: typeof profile.photoUrl === "string" ? profile.photoUrl : undefined,
-    documentsUploaded: Boolean(profile.documentsUploaded),
-    verified: Boolean(profile.verified),
-    rating: Number(profile.rating || 4.5),
-    totalJobsCompleted: Number(profile.totalJobsCompleted || 0),
-  };
 }

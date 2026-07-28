@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Loader2, Smartphone } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
+import { api, type ApiAuthUser } from "@/lib/api";
 import {
   saveProfile,
   setAuthMethod,
@@ -26,13 +26,44 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [formMessage, setFormMessage] = useState("");
   const [demoLoading, setDemoLoading] = useState<Role | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [useMobile, setUseMobile] = useState(false);
+  const [mobilePhone, setMobilePhone] = useState("");
+  const [mobileOtp, setMobileOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
 
   useEffect(() => {
     setAuthMode(mode);
+    void api.warmup();
   }, [mode]);
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const finishAuthentication = (token: string, user: ApiAuthUser) => {
+    setToken(token);
+    setRole(user.role);
+    setPhone(user.phone || "");
+    setProfileComplete(user.role, user.isProfileComplete);
+    saveProfile(user.role, {
+      name: user.name || "",
+      phone: user.phone || "",
+      email: user.email || "",
+      location: user.location || "",
+      address: user.address || "",
+    });
+    navigate({
+      to: user.isProfileComplete
+        ? user.role === "customer"
+          ? "/customer"
+          : "/worker"
+        : user.role === "customer"
+          ? "/customer/setup"
+          : "/worker/setup",
+    });
+  };
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submitting) return;
     setFormMessage("");
 
     if (isSignup && password !== confirmPassword) {
@@ -40,15 +71,116 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
       return;
     }
 
+    const data = new FormData(event.currentTarget);
+    const email = String(data.get("email") || "")
+      .trim()
+      .toLowerCase();
     setAuthMethod("credentials");
     setAuthMode(mode);
-    navigate({ to: "/role-selection" });
+
+    if (isSignup) {
+      sessionStorage.setItem(
+        "anga.pendingCredentials",
+        JSON.stringify({
+          name: String(data.get("name") || "").trim(),
+          email,
+          password,
+        }),
+      );
+      navigate({ to: "/role-selection" });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const result = await api.loginCredentials(email, password);
+      finishAuthentication(result.token, { ...result.user, email: result.user.email || email });
+    } catch (error) {
+      setFormMessage(error instanceof Error ? error.message : "Could not sign in");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const continueWithMobile = () => {
     setAuthMethod("mobile");
     setAuthMode(mode);
+    setFormMessage("");
+    setUseMobile(true);
+  };
+
+  const sendMobileOtp = async () => {
+    const phone = mobilePhone.replace(/\D/g, "").slice(-10);
+    if (phone.length !== 10) {
+      setFormMessage("Enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    setOtpLoading(true);
+    setFormMessage("");
+    try {
+      const result = await api.sendOtp(phone);
+      setMobilePhone(phone);
+      setPhone(phone);
+      setOtpSent(true);
+      if (result.otp) setMobileOtp(result.otp.slice(0, 4));
+      toast.success(result.otp ? `OTP: ${result.otp}` : "OTP sent to your mobile number");
+    } catch (error) {
+      setFormMessage(error instanceof Error ? error.message : "Could not send OTP");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const continueMobileWithRole = (phone: string) => {
+    sessionStorage.setItem("anga.pendingMobileAuth", JSON.stringify({ phone, otp: mobileOtp }));
+    setAuthMethod("mobile");
+    setAuthMode(mode);
     navigate({ to: "/role-selection" });
+  };
+
+  const submitMobile = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (submitting) return;
+
+    const phone = mobilePhone.replace(/\D/g, "").slice(-10);
+    if (phone.length !== 10) {
+      setFormMessage("Enter a valid 10-digit mobile number.");
+      return;
+    }
+    if (!otpSent) {
+      setFormMessage("Send an OTP to this number first.");
+      return;
+    }
+    if (mobileOtp.length !== 4) {
+      setFormMessage("Enter the 4-digit OTP.");
+      return;
+    }
+
+    setSubmitting(true);
+    setFormMessage("");
+    try {
+      const result = await api.verifyOtpCode(phone, mobileOtp);
+      if (result.token && result.user) {
+        finishAuthentication(result.token, result.user);
+        return;
+      }
+
+      if (!isSignup) {
+        setFormMessage("No account exists for this number. Please sign up first.");
+        return;
+      }
+
+      continueMobileWithRole(phone);
+    } catch (error) {
+      if (error instanceof Error && /valid role required/i.test(error.message)) {
+        continueMobileWithRole(phone);
+        return;
+      }
+      setFormMessage(error instanceof Error ? error.message : "Could not verify OTP");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const startDemo = async (role: Role) => {
@@ -115,97 +247,193 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
           </p>
         </section>
 
-        <form onSubmit={submit} className="mt-4 grid gap-2.5">
-          {isSignup && (
+        {useMobile ? (
+          <form key="mobile" onSubmit={submitMobile} className="mt-4 grid gap-2.5">
+            <div className="mb-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-primary">
+                <Smartphone className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span>Verify your mobile number securely with an OTP.</span>
+            </div>
+
             <label className="block">
-              <span className="sr-only">Full name</span>
+              <span className="sr-only">Mobile number</span>
+              <input
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
+                value={mobilePhone}
+                onChange={(event) => {
+                  setMobilePhone(event.target.value.replace(/\D/g, "").slice(0, 10));
+                  if (otpSent) {
+                    setOtpSent(false);
+                    setMobileOtp("");
+                  }
+                }}
+                required
+                maxLength={10}
+                placeholder="Mobile Number"
+                className="min-h-11 w-full rounded-full border border-border bg-card px-5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+              />
+            </label>
+
+            <label className="block">
+              <span className="sr-only">One-time password</span>
               <input
                 type="text"
-                name="name"
-                autoComplete="name"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                value={mobileOtp}
+                onChange={(event) =>
+                  setMobileOtp(event.target.value.replace(/\D/g, "").slice(0, 4))
+                }
                 required
-                placeholder="Full Name"
-                className="min-h-11 w-full rounded-full border border-border bg-card px-5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                maxLength={4}
+                placeholder="Enter 4-digit OTP"
+                className="min-h-11 w-full rounded-full border border-border bg-card px-5 text-sm tracking-[0.2em] outline-none transition placeholder:tracking-normal focus:border-primary focus:ring-2 focus:ring-primary/10"
               />
             </label>
-          )}
 
-          <label className="block">
-            <span className="sr-only">Email address</span>
-            <input
-              type="email"
-              name="email"
-              autoComplete="email"
-              required
-              placeholder="Email Address"
-              className="min-h-11 w-full rounded-full border border-border bg-card px-5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
-            />
-          </label>
+            {formMessage && (
+              <p className="px-2 text-center text-xs text-destructive" role="status">
+                {formMessage}
+              </p>
+            )}
 
-          <label className="block">
-            <span className="sr-only">{isSignup ? "Create password" : "Enter password"}</span>
-            <input
-              type="password"
-              name="password"
-              autoComplete={isSignup ? "new-password" : "current-password"}
-              required
-              minLength={6}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder={isSignup ? "Create Password" : "Enter Password"}
-              className="min-h-11 w-full rounded-full border border-border bg-card px-5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
-            />
-          </label>
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={sendMobileOtp}
+                disabled={otpLoading}
+                className="flex min-h-11 items-center justify-center gap-2 rounded-full border border-primary bg-card px-3 text-sm text-primary transition active:scale-[0.98] disabled:opacity-60"
+              >
+                {otpLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {otpSent ? "Resend OTP" : "Send OTP"}
+              </button>
+              <button
+                type="submit"
+                disabled={submitting || !otpSent}
+                className="flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-3 text-sm text-primary-foreground shadow-lg shadow-primary/20 transition active:scale-[0.98] disabled:opacity-50"
+              >
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                Verify & continue
+              </button>
+            </div>
 
-          {isSignup && (
-            <label className="block">
-              <span className="sr-only">Re-enter password</span>
-              <input
-                type="password"
-                name="confirmPassword"
-                autoComplete="new-password"
-                required
-                minLength={6}
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                placeholder="Re-enter Password"
-                className="min-h-11 w-full rounded-full border border-border bg-card px-5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
-              />
-            </label>
-          )}
-
-          {formMessage && (
-            <p className="px-2 text-center text-xs text-destructive" role="status">
-              {formMessage}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            className="mt-1 min-h-11 w-full rounded-full bg-primary px-5 text-sm text-primary-foreground shadow-lg shadow-primary/20 transition active:scale-[0.98]"
-          >
-            {isSignup ? "Register" : "Sign in"}
-          </button>
-
-          <button
-            type="button"
-            onClick={continueWithMobile}
-            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-primary bg-card px-5 text-sm text-primary transition active:scale-[0.98]"
-          >
-            <Smartphone className="h-4 w-4" aria-hidden="true" />
-            {isSignup ? "Sign up with mobile number" : "Sign in with mobile number"}
-          </button>
-
-          {!isSignup && (
             <button
               type="button"
-              onClick={() => setFormMessage("You’ll verify your account by OTP in the next step.")}
-              className="mx-auto text-xs text-primary"
+              onClick={() => {
+                setUseMobile(false);
+                setFormMessage("");
+                setAuthMethod("credentials");
+              }}
+              className="mx-auto min-h-8 px-3 text-xs text-primary"
             >
-              Forgot your password?
+              Use email and password instead
             </button>
-          )}
-        </form>
+          </form>
+        ) : (
+          <form key="credentials" onSubmit={submit} className="mt-4 grid gap-2.5">
+            {isSignup && (
+              <label className="block">
+                <span className="sr-only">Full name</span>
+                <input
+                  type="text"
+                  name="name"
+                  autoComplete="name"
+                  required
+                  placeholder="Full Name"
+                  className="min-h-11 w-full rounded-full border border-border bg-card px-5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                />
+              </label>
+            )}
+
+            <label className="block">
+              <span className="sr-only">Email address</span>
+              <input
+                type="email"
+                name="email"
+                autoComplete="email"
+                required
+                placeholder="Email Address"
+                className="min-h-11 w-full rounded-full border border-border bg-card px-5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+              />
+            </label>
+
+            <label className="block">
+              <span className="sr-only">{isSignup ? "Create password" : "Enter password"}</span>
+              <input
+                type="password"
+                name="password"
+                autoComplete={isSignup ? "new-password" : "current-password"}
+                required
+                minLength={8}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder={isSignup ? "Create Password" : "Enter Password"}
+                className="min-h-11 w-full rounded-full border border-border bg-card px-5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+              />
+            </label>
+
+            {isSignup && (
+              <label className="block">
+                <span className="sr-only">Re-enter password</span>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  autoComplete="new-password"
+                  required
+                  minLength={8}
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  placeholder="Re-enter Password"
+                  className="min-h-11 w-full rounded-full border border-border bg-card px-5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                />
+              </label>
+            )}
+
+            {formMessage && (
+              <p className="px-2 text-center text-xs text-destructive" role="status">
+                {formMessage}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="mt-1 min-h-11 w-full rounded-full bg-primary px-5 text-sm text-primary-foreground shadow-lg shadow-primary/20 transition active:scale-[0.98] disabled:opacity-60"
+            >
+              {submitting ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Signing in…
+                </span>
+              ) : isSignup ? (
+                "Register"
+              ) : (
+                "Sign in"
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={continueWithMobile}
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-primary bg-card px-5 text-sm text-primary transition active:scale-[0.98]"
+            >
+              <Smartphone className="h-4 w-4" aria-hidden="true" />
+              {isSignup ? "Sign up with mobile number" : "Sign in with mobile number"}
+            </button>
+
+            {!isSignup && (
+              <button
+                type="button"
+                onClick={continueWithMobile}
+                className="mx-auto text-xs text-primary"
+              >
+                Forgot your password?
+              </button>
+            )}
+          </form>
+        )}
 
         <div className="my-3 flex items-center gap-3 text-[0.7rem] text-muted-foreground">
           <span className="h-px flex-1 bg-border" />

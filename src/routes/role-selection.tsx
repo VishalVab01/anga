@@ -1,7 +1,20 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, HardHat, UserRound } from "lucide-react";
-import type { ReactNode } from "react";
-import { getAuthMethod, getAuthMode, setRole, type Role } from "@/lib/session";
+import { ArrowLeft, HardHat, Loader2, UserRound } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { toast } from "sonner";
+import { api } from "@/lib/api";
+import {
+  getAuthMethod,
+  getAuthMode,
+  saveProfile,
+  setPhone,
+  setProfileComplete,
+  setRole,
+  setToken,
+  type AuthMethod,
+  type AuthMode,
+  type Role,
+} from "@/lib/session";
 
 export const Route = createFileRoute("/role-selection")({
   head: () => ({ meta: [{ title: "Anga - Continue as" }] }),
@@ -10,22 +23,95 @@ export const Route = createFileRoute("/role-selection")({
 
 function RoleSelect() {
   const navigate = useNavigate();
-  const mode = getAuthMode();
+  const [mode, setMode] = useState<AuthMode>("signup");
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("credentials");
+  const [loadingRole, setLoadingRole] = useState<Role | null>(null);
 
-  const pick = (role: Role) => {
+  useEffect(() => {
+    setMode(getAuthMode());
+    setAuthMethod(getAuthMethod());
+  }, []);
+
+  const pick = async (role: Role) => {
+    if (loadingRole) return;
     setRole(role);
 
-    if (getAuthMethod() === "mobile") {
-      navigate({ to: "/auth/phone" });
+    if (authMethod === "mobile") {
+      const rawMobileAuth = sessionStorage.getItem("anga.pendingMobileAuth");
+      if (!rawMobileAuth) {
+        toast.error("Your mobile verification expired. Please verify your number again.");
+        navigate({ to: mode === "login" ? "/auth/login" : "/auth/signup" });
+        return;
+      }
+
+      setLoadingRole(role);
+      try {
+        const { phone, otp } = JSON.parse(rawMobileAuth) as { phone: string; otp: string };
+        const result = await api.verifyOtp(phone, otp, role);
+        setToken(result.token);
+        setRole(result.user.role);
+        setPhone(result.user.phone || phone);
+        setProfileComplete(result.user.role, result.user.isProfileComplete);
+        saveProfile(result.user.role, {
+          name: result.user.name || "",
+          phone: result.user.phone || phone,
+          location: result.user.location || "",
+          address: result.user.address || "",
+        });
+        sessionStorage.removeItem("anga.pendingMobileAuth");
+        navigate({
+          to: result.user.isProfileComplete
+            ? result.user.role === "customer"
+              ? "/customer"
+              : "/worker"
+            : result.user.role === "customer"
+              ? "/customer/setup"
+              : "/worker/setup",
+        });
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not create account");
+      } finally {
+        setLoadingRole(null);
+      }
       return;
     }
 
     if (mode === "signup") {
-      navigate({ to: role === "customer" ? "/customer/setup" : "/worker/setup" });
+      const rawCredentials = sessionStorage.getItem("anga.pendingCredentials");
+      if (!rawCredentials) {
+        toast.error("Your signup details expired. Please enter them again.");
+        navigate({ to: "/auth/signup" });
+        return;
+      }
+
+      setLoadingRole(role);
+      try {
+        const credentials = JSON.parse(rawCredentials) as {
+          name: string;
+          email: string;
+          password: string;
+        };
+        const result = await api.registerCredentials({ ...credentials, role });
+        setToken(result.token);
+        setRole(result.user.role);
+        setPhone(result.user.phone || "");
+        setProfileComplete(result.user.role, false);
+        saveProfile(result.user.role, {
+          name: result.user.name || credentials.name,
+          phone: "",
+          email: result.user.email || credentials.email,
+        });
+        sessionStorage.removeItem("anga.pendingCredentials");
+        navigate({ to: role === "customer" ? "/customer/setup" : "/worker/setup" });
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not create account");
+      } finally {
+        setLoadingRole(null);
+      }
       return;
     }
 
-    navigate({ to: role === "customer" ? "/customer" : "/worker" });
+    navigate({ to: "/auth/login" });
   };
 
   const goBack = () => {
@@ -57,7 +143,9 @@ function RoleSelect() {
         <section className="mt-10">
           <h1 className="role-heading text-2xl tracking-[-0.03em]">Continue as a</h1>
           <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
-            Choose how you want to use Anga and continue with your mobile number.
+            {authMethod === "mobile"
+              ? "Your mobile number is verified. Choose how you want to use Anga."
+              : "Choose how you want to use Anga."}
           </p>
 
           <div className="mt-7 grid gap-4">
@@ -66,12 +154,16 @@ function RoleSelect() {
               title="As a Customer"
               subtitle="Hire trusted local workers quickly."
               highlighted
+              loading={loadingRole === "customer"}
+              disabled={Boolean(loadingRole)}
               onClick={() => pick("customer")}
             />
             <RoleButton
               icon={<HardHat className="h-7 w-7" />}
               title="As a Worker"
               subtitle="Find local jobs that match your skills."
+              loading={loadingRole === "worker"}
+              disabled={Boolean(loadingRole)}
               onClick={() => pick("worker")}
             />
           </div>
@@ -96,22 +188,33 @@ type RoleButtonProps = {
   title: string;
   subtitle: string;
   highlighted?: boolean;
+  loading?: boolean;
+  disabled?: boolean;
   onClick: () => void;
 };
 
-function RoleButton({ icon, title, subtitle, highlighted = false, onClick }: RoleButtonProps) {
+function RoleButton({
+  icon,
+  title,
+  subtitle,
+  highlighted = false,
+  loading = false,
+  disabled = false,
+  onClick,
+}: RoleButtonProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`flex min-h-[5.75rem] w-full items-center gap-4 rounded-2xl border px-4 py-3 text-left shadow-sm transition active:scale-[0.99] ${
+      disabled={disabled}
+      className={`flex min-h-[5.75rem] w-full items-center gap-4 rounded-2xl border px-4 py-3 text-left shadow-sm transition active:scale-[0.99] disabled:opacity-60 ${
         highlighted
           ? "border-primary bg-primary/[0.04]"
           : "border-transparent bg-card hover:border-border"
       }`}
     >
       <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-card text-primary shadow-sm">
-        {icon}
+        {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : icon}
       </span>
       <span className="min-w-0">
         <span className="role-card-title block text-base">{title}</span>

@@ -1,15 +1,20 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
+  ArrowLeft,
   Camera,
   Check,
   ChevronDown,
+  ClipboardCheck,
   ImagePlus,
   Loader2,
+  Sparkles,
   Trash2,
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
+import { BottomNav } from "@/components/BottomNav";
+import { LocationAutocomplete } from "@/components/LocationAutocomplete";
 import { PageShell } from "@/components/PageShell";
 import { api } from "@/lib/api";
 import { services, type Service } from "@/lib/data";
@@ -29,8 +34,18 @@ function NewRequest() {
   const [problemImageUrl, setProblemImageUrl] = useState("");
   const [problemImageName, setProblemImageName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [preferredWorkerName, setPreferredWorkerName] = useState("");
 
   useEffect(() => {
+    const selectedService = sessionStorage.getItem("anga.customerSelectedService");
+    if (selectedService && services.some((item) => item.slug === selectedService)) {
+      setService(selectedService);
+    }
+    sessionStorage.removeItem("anga.customerSelectedService");
+    const preferredWorker = sessionStorage.getItem("anga.preferredWorkerName");
+    if (preferredWorker) setPreferredWorkerName(preferredWorker);
+    sessionStorage.removeItem("anga.preferredWorkerName");
+
     const raw = sessionStorage.getItem("anga.assistantDraft");
     if (!raw) return;
     try {
@@ -48,12 +63,11 @@ function NewRequest() {
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    if (
-      !data.get("description") ||
-      !data.get("location") ||
-      !data.get("date") ||
-      !data.get("budget")
-    ) {
+    const description = String(data.get("description") || "").trim();
+    const location = String(data.get("location") || "").trim();
+    const budget = Number(data.get("budget"));
+    const workersNeeded = Number(data.get("workers"));
+    if (!description || !location || !data.get("date") || budget < 1 || workersNeeded < 1) {
       toast.error(
         lang === "hi" ? "Please fill all required details" : "Please fill all required fields",
       );
@@ -63,14 +77,14 @@ function NewRequest() {
     api
       .createJob({
         category: service,
-        title: String(data.get("description") || "Local job").slice(0, 52),
-        description: data.get("description"),
+        title: description.slice(0, 52),
+        description,
         problemImageUrl,
-        location: data.get("location"),
+        location,
         date: data.get("date"),
         time: data.get("time"),
-        wage: data.get("budget"),
-        workersNeeded: data.get("workers"),
+        wage: budget,
+        workersNeeded,
         urgency: data.get("urgency"),
       })
       .then(() => {
@@ -84,128 +98,192 @@ function NewRequest() {
   };
 
   return (
-    <PageShell title={t("newRequest")} back="/customer">
-      <form onSubmit={submit} className="space-y-4">
-        <Field label={t("serviceType")}>
-          <ServicePicker
-            value={service}
-            open={serviceMenuOpen}
-            onOpenChange={setServiceMenuOpen}
-            onChange={setService}
-            lang={lang}
-          />
-        </Field>
+    <PageShell bottomNav={<BottomNav role="customer" />}>
+      <div className="-mx-4 -mb-28 -mt-4 min-h-[100dvh] bg-primary pb-28">
+        <header className="relative overflow-hidden px-4 pb-8 pt-5 text-primary-foreground">
+          <span className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-white/10 blur-3xl" />
+          <div className="relative flex items-center justify-between">
+            <Link
+              to="/customer"
+              aria-label="Back to customer home"
+              className="grid h-11 w-11 place-items-center rounded-full bg-white/15 backdrop-blur"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <span className="grid h-11 w-11 place-items-center rounded-full bg-white/15">
+              <ClipboardCheck className="h-5 w-5" />
+            </span>
+          </div>
+          <div className="relative mt-6">
+            <p className="text-xs text-primary-foreground/65">Create a clear hiring request</p>
+            <h1 className="customer-section-title mt-1 text-[1.85rem] leading-tight">
+              {t("newRequest")}
+            </h1>
+            <p className="mt-2 max-w-[19rem] text-sm leading-5 text-primary-foreground/70">
+              Add the work, location, timing and budget so Anga can find better worker matches.
+            </p>
+          </div>
+          <div className="relative mt-5 flex items-center gap-2 rounded-[1.25rem] bg-white/12 p-3 text-xs text-primary-foreground/75 backdrop-blur">
+            <Sparkles className="h-4 w-4 shrink-0" />
+            You can also describe the work naturally to Anga AI.
+          </div>
+        </header>
 
-        <Field label={t("description")}>
-          <textarea
-            name="description"
-            rows={4}
-            defaultValue={draft?.summary ?? ""}
-            placeholder={
-              lang === "hi"
-                ? "Describe the work in simple words"
-                : "Describe the work in simple words"
-            }
-            className="field min-h-28 resize-none"
-          />
-        </Field>
+        <main className="mx-1.5 min-h-[70dvh] rounded-t-[2.5rem] bg-background px-4 pb-7 pt-5">
+          {preferredWorkerName && (
+            <div className="mb-4 flex items-center gap-3 rounded-[1.35rem] border border-primary/15 bg-primary/[0.055] p-3.5">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+                <Check className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="customer-card-title truncate text-sm">
+                  Request for {preferredWorkerName}
+                </p>
+                <p className="mt-0.5 text-[10px] leading-4 text-muted-foreground">
+                  Post the job now; this worker can review and apply to it.
+                </p>
+              </div>
+            </div>
+          )}
+          <form onSubmit={submit} className="space-y-4">
+            <section className="space-y-4 rounded-[1.6rem] bg-card p-4 shadow-sm">
+              <Field label={t("serviceType")}>
+                <ServicePicker
+                  value={service}
+                  open={serviceMenuOpen}
+                  onOpenChange={setServiceMenuOpen}
+                  onChange={setService}
+                  lang={lang}
+                />
+              </Field>
 
-        <ProblemImageUpload
-          previewUrl={problemImageUrl}
-          fileName={problemImageName}
-          onRemove={() => {
-            setProblemImageUrl("");
-            setProblemImageName("");
-          }}
-          onFileSelect={async (file) => {
-            setProblemImageName(file.name);
-            try {
-              const dataUrl = await fileToProblemImageDataUrl(file);
-              setProblemImageUrl(dataUrl);
-              toast.success(
-                lang === "hi" ? "Problem photo added" : "Problem photo added successfully",
-              );
-            } catch {
-              setProblemImageName("");
-              setProblemImageUrl("");
-              toast.error(lang === "hi" ? "Could not add photo" : "Could not add photo");
-            }
-          }}
-        />
+              <Field label={t("description")}>
+                <textarea
+                  name="description"
+                  rows={4}
+                  defaultValue={draft?.summary ?? ""}
+                  placeholder={
+                    lang === "hi"
+                      ? "Describe the work in simple words"
+                      : "Describe the work in simple words"
+                  }
+                  className="field min-h-28 resize-none"
+                  required
+                />
+              </Field>
 
-        <Field label={t("location")}>
-          <input
-            name="location"
-            defaultValue={draft?.location ?? ""}
-            placeholder="Area, City"
-            className="field"
-          />
-        </Field>
+              <ProblemImageUpload
+                previewUrl={problemImageUrl}
+                fileName={problemImageName}
+                onRemove={() => {
+                  setProblemImageUrl("");
+                  setProblemImageName("");
+                }}
+                onFileSelect={async (file) => {
+                  if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
+                    toast.error("Choose an image smaller than 5 MB");
+                    return;
+                  }
+                  setProblemImageName(file.name);
+                  try {
+                    const dataUrl = await fileToProblemImageDataUrl(file);
+                    setProblemImageUrl(dataUrl);
+                    toast.success(
+                      lang === "hi" ? "Problem photo added" : "Problem photo added successfully",
+                    );
+                  } catch {
+                    setProblemImageName("");
+                    setProblemImageUrl("");
+                    toast.error(lang === "hi" ? "Could not add photo" : "Could not add photo");
+                  }
+                }}
+              />
+            </section>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={t("date")}>
-            <input
-              name="date"
-              type="date"
-              defaultValue={draftDate(draft?.when)}
-              className="field"
-            />
-          </Field>
-          <Field label={t("time")}>
-            <input name="time" type="time" className="field" />
-          </Field>
-        </div>
+            <section className="space-y-4 rounded-[1.6rem] bg-card p-4 shadow-sm">
+              <Field label={t("location")}>
+                <LocationAutocomplete
+                  name="location"
+                  defaultValue={draft?.location ?? ""}
+                  placeholder="Area, City"
+                  required
+                />
+              </Field>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={t("budget")}>
-            <input
-              name="budget"
-              type="number"
-              defaultValue={draft?.budget ?? ""}
-              placeholder="900"
-              className="field"
-            />
-          </Field>
-          <Field label={t("workersNeeded")}>
-            <input
-              name="workers"
-              type="number"
-              min="1"
-              defaultValue={draft?.workersNeeded ?? 1}
-              className="field"
-            />
-          </Field>
-        </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label={t("date")}>
+                  <input
+                    name="date"
+                    type="date"
+                    defaultValue={draftDate(draft?.when)}
+                    min={todayInputValue()}
+                    className="field"
+                    required
+                  />
+                </Field>
+                <Field label={t("time")}>
+                  <input name="time" type="time" className="field" />
+                </Field>
+              </div>
+            </section>
 
-        <Field label={t("urgency")}>
-          <select name="urgency" defaultValue={draftUrgency(draft)} className="field">
-            <option>{lang === "hi" ? "Today" : "Today"}</option>
-            <option>{lang === "hi" ? "Tomorrow" : "Tomorrow"}</option>
-            <option>{lang === "hi" ? "This week" : "This week"}</option>
-            <option>{lang === "hi" ? "Urgent" : "Urgent"}</option>
-          </select>
-        </Field>
+            <section className="space-y-4 rounded-[1.6rem] bg-card p-4 shadow-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <Field label={t("budget")}>
+                  <input
+                    name="budget"
+                    type="number"
+                    defaultValue={draft?.budget ?? ""}
+                    placeholder="900"
+                    min="1"
+                    className="field"
+                    required
+                  />
+                </Field>
+                <Field label={t("workersNeeded")}>
+                  <input
+                    name="workers"
+                    type="number"
+                    min="1"
+                    defaultValue={draft?.workersNeeded ?? 1}
+                    className="field"
+                    required
+                  />
+                </Field>
+              </div>
 
-        <div className="grid grid-cols-2 gap-3 pt-2">
-          <button
-            type="button"
-            onClick={() => navigate({ to: "/customer" })}
-            className="btn-outline"
-          >
-            {t("cancel")}
-          </button>
-          <button type="submit" disabled={loading} className="btn-primary disabled:opacity-60">
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {lang === "hi" ? "Posting..." : "Posting..."}
-              </>
-            ) : (
-              t("postJob")
-            )}
-          </button>
-        </div>
-      </form>
+              <Field label={t("urgency")}>
+                <select name="urgency" defaultValue={draftUrgency(draft)} className="field">
+                  <option>{lang === "hi" ? "Today" : "Today"}</option>
+                  <option>{lang === "hi" ? "Tomorrow" : "Tomorrow"}</option>
+                  <option>{lang === "hi" ? "This week" : "This week"}</option>
+                  <option>{lang === "hi" ? "Urgent" : "Urgent"}</option>
+                </select>
+              </Field>
+            </section>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => navigate({ to: "/customer" })}
+                className="btn-outline"
+              >
+                {t("cancel")}
+              </button>
+              <button type="submit" disabled={loading} className="btn-primary disabled:opacity-60">
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {lang === "hi" ? "Posting..." : "Posting..."}
+                  </>
+                ) : (
+                  t("postJob")
+                )}
+              </button>
+            </div>
+          </form>
+        </main>
+      </div>
     </PageShell>
   );
 }
@@ -390,6 +468,12 @@ function draftDate(when?: string) {
   if (when === "Tomorrow") date.setDate(date.getDate() + 1);
   if (when !== "Today" && when !== "Tomorrow") return "";
   return date.toISOString().slice(0, 10);
+}
+
+function todayInputValue() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 10);
 }
 
 function draftUrgency(draft: AssistantDraft | null) {

@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { Application } from "../models/Application.js";
 import { Job } from "../models/Job.js";
@@ -7,6 +8,14 @@ import { WorkerProfile } from "../models/WorkerProfile.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const jobsRouter = express.Router();
+
+jobsRouter.param("id", (req, res, next, id) => {
+  if (!mongoose.isValidObjectId(id)) {
+    res.status(400).json({ message: "Invalid job id" });
+    return;
+  }
+  next();
+});
 
 function jobQuery(req) {
   const query = {};
@@ -25,14 +34,33 @@ jobsRouter.post(
   requireRole("customer"),
   asyncHandler(async (req, res) => {
     const body = req.body;
+    const category = String(body.category || body.service || "").trim();
+    const description = String(body.description || "").trim();
+    const location = String(body.location || "").trim();
+    const wage = Number(body.wage || body.budget);
+    const workersNeeded = Number(body.workersNeeded || body.workers || 1);
+    if (
+      !category ||
+      !description ||
+      !location ||
+      !Number.isFinite(wage) ||
+      wage < 1 ||
+      !Number.isInteger(workersNeeded) ||
+      workersNeeded < 1 ||
+      workersNeeded > 50
+    ) {
+      return res.status(400).json({
+        message: "Service, description, location, valid budget and worker count are required",
+      });
+    }
     const job = await Job.create({
       customerId: req.user._id,
       title: body.title || body.description?.slice(0, 48) || "Local job",
-      category: body.category || body.service,
-      description: body.description,
+      category,
+      description,
       problemImageUrl: body.problemImageUrl || "",
-      location: body.location,
-      wage: Number(body.wage || body.budget),
+      location,
+      wage,
       date: body.date || "",
       time: body.time || "",
       urgent: Boolean(
@@ -41,7 +69,7 @@ jobsRouter.post(
           .toLowerCase()
           .includes("urgent"),
       ),
-      workersNeeded: Number(body.workersNeeded || body.workers || 1),
+      workersNeeded,
     });
     res.status(201).json({ job });
   }),
@@ -101,9 +129,39 @@ jobsRouter.put(
   requireAuth,
   requireRole("customer"),
   asyncHandler(async (req, res) => {
+    const allowedKeys = [
+      "title",
+      "category",
+      "description",
+      "problemImageUrl",
+      "location",
+      "date",
+      "time",
+      "urgent",
+    ];
+    const updates = Object.fromEntries(
+      allowedKeys.filter((key) => Object.hasOwn(req.body, key)).map((key) => [key, req.body[key]]),
+    );
+    if (Object.hasOwn(req.body, "wage")) {
+      const wage = Number(req.body.wage);
+      if (!Number.isFinite(wage) || wage < 1) {
+        return res.status(400).json({ message: "Budget must be greater than zero" });
+      }
+      updates.wage = wage;
+    }
+    if (Object.hasOwn(req.body, "workersNeeded")) {
+      const workersNeeded = Number(req.body.workersNeeded);
+      if (!Number.isInteger(workersNeeded) || workersNeeded < 1 || workersNeeded > 50) {
+        return res.status(400).json({ message: "Worker count must be between 1 and 50" });
+      }
+      updates.workersNeeded = workersNeeded;
+    }
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: "No editable job fields supplied" });
+    }
     const job = await Job.findOneAndUpdate(
       { _id: req.params.id, customerId: req.user._id },
-      req.body,
+      updates,
       { new: true, runValidators: true },
     );
     if (!job) return res.status(404).json({ message: "Job not found or not yours" });
@@ -187,6 +245,9 @@ jobsRouter.post(
   requireRole("customer"),
   asyncHandler(async (req, res) => {
     const workerId = req.body.workerId;
+    if (!mongoose.isValidObjectId(workerId)) {
+      return res.status(400).json({ message: "Valid worker id required" });
+    }
     const job = await Job.findOne({ _id: req.params.id, customerId: req.user._id });
     if (!job) return res.status(404).json({ message: "Job not found or not yours" });
 

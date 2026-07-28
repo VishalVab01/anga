@@ -22,7 +22,9 @@ import { Route as WorkerSavedRouteImport } from './routes/worker.saved'
 import { Route as WorkerProfileRouteImport } from './routes/worker.profile'
 import { Route as WorkerNotificationsRouteImport } from './routes/worker.notifications'
 import { Route as WorkerApplicationsRouteImport } from './routes/worker.applications'
+import { Route as SettingsPreferencesRouteImport } from './routes/settings.preferences'
 import { Route as CustomerSetupRouteImport } from './routes/customer.setup'
+import { Route as CustomerSavedRouteImport } from './routes/customer.saved'
 import { Route as CustomerRequestRouteImport } from './routes/customer.request'
 import { Route as CustomerProfileRouteImport } from './routes/customer.profile'
 import { Route as CustomerNotificationsRouteImport } from './routes/customer.notifications'
@@ -101,9 +103,19 @@ const WorkerApplicationsRoute = WorkerApplicationsRouteImport.update({
   path: '/worker/applications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsPreferencesRoute = SettingsPreferencesRouteImport.update({
+  id: '/settings/preferences',
+  path: '/settings/preferences',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CustomerSetupRoute = CustomerSetupRouteImport.update({
   id: '/customer/setup',
   path: '/customer/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerSavedRoute = CustomerSavedRouteImport.update({
+  id: '/customer/saved',
+  path: '/customer/saved',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CustomerRequestRoute = CustomerRequestRouteImport.update({
@@ -182,7 +194,9 @@ export interface FileRoutesByFullPath {
   '/customer/notifications': typeof CustomerNotificationsRoute
   '/customer/profile': typeof CustomerProfileRoute
   '/customer/request': typeof CustomerRequestRoute
+  '/customer/saved': typeof CustomerSavedRoute
   '/customer/setup': typeof CustomerSetupRoute
+  '/settings/preferences': typeof SettingsPreferencesRoute
   '/worker/applications': typeof WorkerApplicationsRoute
   '/worker/notifications': typeof WorkerNotificationsRoute
   '/worker/profile': typeof WorkerProfileRoute
@@ -210,7 +224,9 @@ export interface FileRoutesByTo {
   '/customer/notifications': typeof CustomerNotificationsRoute
   '/customer/profile': typeof CustomerProfileRoute
   '/customer/request': typeof CustomerRequestRoute
+  '/customer/saved': typeof CustomerSavedRoute
   '/customer/setup': typeof CustomerSetupRoute
+  '/settings/preferences': typeof SettingsPreferencesRoute
   '/worker/applications': typeof WorkerApplicationsRoute
   '/worker/notifications': typeof WorkerNotificationsRoute
   '/worker/profile': typeof WorkerProfileRoute
@@ -239,7 +255,9 @@ export interface FileRoutesById {
   '/customer/notifications': typeof CustomerNotificationsRoute
   '/customer/profile': typeof CustomerProfileRoute
   '/customer/request': typeof CustomerRequestRoute
+  '/customer/saved': typeof CustomerSavedRoute
   '/customer/setup': typeof CustomerSetupRoute
+  '/settings/preferences': typeof SettingsPreferencesRoute
   '/worker/applications': typeof WorkerApplicationsRoute
   '/worker/notifications': typeof WorkerNotificationsRoute
   '/worker/profile': typeof WorkerProfileRoute
@@ -269,7 +287,9 @@ export interface FileRouteTypes {
     | '/customer/notifications'
     | '/customer/profile'
     | '/customer/request'
+    | '/customer/saved'
     | '/customer/setup'
+    | '/settings/preferences'
     | '/worker/applications'
     | '/worker/notifications'
     | '/worker/profile'
@@ -297,7 +317,9 @@ export interface FileRouteTypes {
     | '/customer/notifications'
     | '/customer/profile'
     | '/customer/request'
+    | '/customer/saved'
     | '/customer/setup'
+    | '/settings/preferences'
     | '/worker/applications'
     | '/worker/notifications'
     | '/worker/profile'
@@ -325,7 +347,9 @@ export interface FileRouteTypes {
     | '/customer/notifications'
     | '/customer/profile'
     | '/customer/request'
+    | '/customer/saved'
     | '/customer/setup'
+    | '/settings/preferences'
     | '/worker/applications'
     | '/worker/notifications'
     | '/worker/profile'
@@ -354,7 +378,9 @@ export interface RootRouteChildren {
   CustomerNotificationsRoute: typeof CustomerNotificationsRoute
   CustomerProfileRoute: typeof CustomerProfileRoute
   CustomerRequestRoute: typeof CustomerRequestRoute
+  CustomerSavedRoute: typeof CustomerSavedRoute
   CustomerSetupRoute: typeof CustomerSetupRoute
+  SettingsPreferencesRoute: typeof SettingsPreferencesRoute
   WorkerApplicationsRoute: typeof WorkerApplicationsRoute
   WorkerNotificationsRoute: typeof WorkerNotificationsRoute
   WorkerProfileRoute: typeof WorkerProfileRoute
@@ -461,11 +487,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkerApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/preferences': {
+      id: '/settings/preferences'
+      path: '/settings/preferences'
+      fullPath: '/settings/preferences'
+      preLoaderRoute: typeof SettingsPreferencesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/customer/setup': {
       id: '/customer/setup'
       path: '/customer/setup'
       fullPath: '/customer/setup'
       preLoaderRoute: typeof CustomerSetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/saved': {
+      id: '/customer/saved'
+      path: '/customer/saved'
+      fullPath: '/customer/saved'
+      preLoaderRoute: typeof CustomerSavedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/customer/request': {
@@ -570,7 +610,9 @@ const rootRouteChildren: RootRouteChildren = {
   CustomerNotificationsRoute: CustomerNotificationsRoute,
   CustomerProfileRoute: CustomerProfileRoute,
   CustomerRequestRoute: CustomerRequestRoute,
+  CustomerSavedRoute: CustomerSavedRoute,
   CustomerSetupRoute: CustomerSetupRoute,
+  SettingsPreferencesRoute: SettingsPreferencesRoute,
   WorkerApplicationsRoute: WorkerApplicationsRoute,
   WorkerNotificationsRoute: WorkerNotificationsRoute,
   WorkerProfileRoute: WorkerProfileRoute,

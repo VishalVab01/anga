@@ -23,27 +23,48 @@ profileRouter.put(
   requireRole("worker"),
   asyncHandler(async (req, res) => {
     const body = req.body;
+    const name = String(body.name || "").trim();
+    const phone = String(body.phone || req.user.phone || "").trim();
+    const location = String(body.location || body.area || "").trim();
+    const skills = Array.isArray(body.skills)
+      ? body.skills.map((skill) => String(skill).trim()).filter(Boolean)
+      : [];
+    const expectedWage = Number(body.expectedWage || body.wage);
+    if (
+      !name ||
+      phone.replace(/\D/g, "").length < 10 ||
+      !location ||
+      skills.length === 0 ||
+      !Number.isFinite(expectedWage) ||
+      expectedWage < 1
+    ) {
+      return res.status(400).json({
+        message: "Name, valid phone, location, skill and expected wage are required",
+      });
+    }
+    const phoneOwner = await User.exists({ phone, _id: { $ne: req.user._id } });
+    if (phoneOwner) return res.status(409).json({ message: "Mobile number already in use" });
     const profile = await WorkerProfile.findOneAndUpdate(
       { userId: req.user._id },
       {
         userId: req.user._id,
-        name: body.name,
-        phone: body.phone || req.user.phone,
-        skills: Array.isArray(body.skills) && body.skills.length ? body.skills : ["electrician"],
+        name,
+        phone,
+        skills,
         experience: body.experience || "",
-        expectedWage: Number(body.expectedWage || body.wage || 0),
+        expectedWage,
         availableToday: Boolean(body.availableToday ?? body.available),
         preferredDistance: body.preferredDistance || body.distance || "5 km",
-        location: body.location || body.area || "",
+        location,
         photoUrl: body.photoUrl || "",
         documentsUploaded: Boolean(body.documentsUploaded || body.document),
-        verified: Boolean(body.verified),
       },
       { upsert: true, new: true, runValidators: true },
     );
 
     await User.findByIdAndUpdate(req.user._id, {
       name: profile.name,
+      phone: profile.phone,
       location: profile.location,
       avatarInitial: profile.name.charAt(0).toUpperCase(),
       isProfileComplete: true,
@@ -59,20 +80,37 @@ profileRouter.put(
   requireRole("customer"),
   asyncHandler(async (req, res) => {
     const body = req.body;
+    const name = String(body.name || "").trim();
+    const phone = String(body.phone || req.user.phone || "").trim();
+    const address = String(body.address || "").trim();
+    const customerType = String(body.customerType || body.ownerType || "homeowner");
+    if (
+      !name ||
+      phone.replace(/\D/g, "").length < 10 ||
+      !address ||
+      !["homeowner", "shop_owner", "contractor", "other"].includes(customerType)
+    ) {
+      return res.status(400).json({
+        message: "Name, valid phone, address and customer type are required",
+      });
+    }
+    const phoneOwner = await User.exists({ phone, _id: { $ne: req.user._id } });
+    if (phoneOwner) return res.status(409).json({ message: "Mobile number already in use" });
     const profile = await CustomerProfile.findOneAndUpdate(
       { userId: req.user._id },
       {
         userId: req.user._id,
-        name: body.name,
-        phone: body.phone || req.user.phone,
-        address: body.address || "",
-        customerType: body.customerType || body.ownerType || "homeowner",
+        name,
+        phone,
+        address,
+        customerType,
       },
       { upsert: true, new: true, runValidators: true },
     );
 
     await User.findByIdAndUpdate(req.user._id, {
       name: profile.name,
+      phone: profile.phone,
       address: profile.address,
       location: profile.address,
       avatarInitial: profile.name.charAt(0).toUpperCase(),

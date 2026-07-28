@@ -84,20 +84,41 @@ export type ApiCustomerProfile = {
   rating: number;
 };
 
+export type ApiAuthUser = {
+  _id: string;
+  role: Role;
+  isProfileComplete: boolean;
+  name?: string;
+  phone?: string;
+  email?: string;
+  location?: string;
+  address?: string;
+};
+
 function token() {
   return typeof window === "undefined" ? "" : localStorage.getItem("anga.token") || "";
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 15_000): Promise<T> {
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
   const authToken = token();
   if (authToken) headers.set("Authorization", `Bearer ${authToken}`);
 
   const url = `${API_URL}${path}`;
-  const response = await fetch(url, { ...options, headers }).catch(() => {
+  const controller = new AbortController();
+  const timeout = globalThis.setTimeout(() => controller.abort(), timeoutMs);
+  let response: Response;
+  try {
+    response = await fetch(url, { ...options, headers, signal: controller.signal });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiError("Anga is taking longer than usual to connect. Please try once more.", 0);
+    }
     throw new ApiError(`Could not reach API at ${API_URL}. Check backend URL and CORS.`, 0);
-  });
+  } finally {
+    globalThis.clearTimeout(timeout);
+  }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new ApiError(data.message || "Request failed", response.status);
   return data as T;
@@ -109,10 +130,32 @@ export const api = {
       // Best-effort Render warmup. User-facing requests still handle real errors.
     }),
   sendOtp: (phone: string) =>
-    request<{ otp?: string; message: string }>("/auth/send-otp", {
-      method: "POST",
-      body: JSON.stringify({ phone }),
-    }),
+    request<{ otp?: string; message: string }>(
+      "/auth/send-otp",
+      {
+        method: "POST",
+        body: JSON.stringify({ phone }),
+      },
+      60_000,
+    ),
+  registerCredentials: (body: { name: string; email: string; password: string; role: Role }) =>
+    request<{ token: string; user: ApiAuthUser }>(
+      "/auth/register",
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+      60_000,
+    ),
+  loginCredentials: (email: string, password: string) =>
+    request<{ token: string; user: ApiAuthUser }>(
+      "/auth/login",
+      {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      },
+      60_000,
+    ),
   verifyOtp: (phone: string, otp: string, role: Role) =>
     request<{
       token: string;
@@ -125,10 +168,28 @@ export const api = {
         location?: string;
         address?: string;
       };
-    }>("/auth/verify-otp", {
-      method: "POST",
-      body: JSON.stringify({ phone, otp, role }),
-    }),
+    }>(
+      "/auth/verify-otp",
+      {
+        method: "POST",
+        body: JSON.stringify({ phone, otp, role }),
+      },
+      60_000,
+    ),
+  verifyOtpCode: (phone: string, otp: string) =>
+    request<{
+      verified: true;
+      needsRole: boolean;
+      token?: string;
+      user?: ApiAuthUser;
+    }>(
+      "/auth/verify-otp",
+      {
+        method: "POST",
+        body: JSON.stringify({ phone, otp }),
+      },
+      60_000,
+    ),
   me: () =>
     request<{
       user: { _id: string; role: Role; isProfileComplete: boolean; name: string; phone: string };
@@ -177,4 +238,5 @@ export const api = {
   markNotificationsRead: () =>
     request<{ message: string }>("/notifications/read-all", { method: "PATCH" }),
   workers: (params = "") => request<{ workers: ApiWorkerProfile[] }>(`/workers${params}`),
+  worker: (id: string) => request<{ worker: ApiWorkerProfile }>(`/workers/${id}`),
 };

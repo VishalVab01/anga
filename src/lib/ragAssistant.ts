@@ -82,10 +82,13 @@ export function answerWithRag(query: string, lang: Lang): RagAnswer {
         lang === "hi"
           ? "Mujhse nearby jobs, workers, OTP login, profile setup, safety ya payment ke baare mein pooch sakte hain."
           : "Ask me about nearby jobs, workers, OTP login, profile setup, safety, payments or how to use Anga.",
-      sources: topSources,
+      sources: sources.slice(0, 3),
       suggestions: defaultSuggestions(lang),
     };
   }
+
+  const greeting = answerGreeting(cleanQuery, lang);
+  if (greeting) return greeting;
 
   const intentAnswer = answerByIntent(cleanQuery, sources, lang);
   if (intentAnswer) return intentAnswer;
@@ -121,6 +124,12 @@ export function answerWithRag(query: string, lang: Lang): RagAnswer {
 
 function answerByIntent(query: string, sources: RagSource[], lang: Lang): RagAnswer | null {
   const normalized = query.toLowerCase();
+  const requestedService = services.find((service) =>
+    [service.slug, service.en, service.hi].some((name) => normalized.includes(name.toLowerCase())),
+  );
+  const wantsServiceJobs =
+    Boolean(requestedService) &&
+    /job|jobs|work|opening|vacancy|kaam|dikhao|show|find|chahiye/.test(normalized);
   const wantsTodayJobs =
     /today|aaj|आज|kaam chahiye|काम चाहिए|job|jobs|work/.test(normalized) &&
     /today|aaj|आज|show|dikhao|दिखाओ/.test(normalized);
@@ -130,6 +139,27 @@ function answerByIntent(query: string, sources: RagSource[], lang: Lang): RagAns
   const wantsPaymentSafety =
     /payment|pay|wage|cash|upi|safe|budget|पैसे|भुगतान|मजदूरी/.test(normalized) &&
     /safe|safety|secure|clarity|कैसे|how|रख/.test(normalized);
+
+  if (requestedService && wantsServiceJobs) {
+    const serviceLabel = requestedService.en;
+    const jobSources = sources.filter(
+      (source) =>
+        source.type === "job" &&
+        `${source.title} ${source.body}`.toLowerCase().includes(serviceLabel.toLowerCase()),
+    );
+
+    return {
+      answer:
+        lang === "hi"
+          ? `Bilkul! Mujhe ${serviceLabel} ke ${jobSources.length} matching jobs mile. Neeche wage, location aur timing compare karke job detail khol sakte hain.`
+          : `Absolutely! I found ${jobSources.length} matching ${serviceLabel.toLowerCase()} job${jobSources.length === 1 ? "" : "s"}. Compare the pay, location and timing below, then open any job for details.`,
+      sources: jobSources,
+      suggestions:
+        lang === "hi"
+          ? ["Aaj ke jobs dikhao", "Sabse paas ka job kaunsa hai?", "Apply kaise karu?"]
+          : ["Show today's jobs", "Which job is closest?", "How do I apply?"],
+    };
+  }
 
   if (wantsTodayJobs) {
     const jobSources = sources
@@ -206,6 +236,38 @@ function answerByIntent(query: string, sources: RagSource[], lang: Lang): RagAns
   }
 
   return null;
+}
+
+function answerGreeting(query: string, lang: Lang): RagAnswer | null {
+  const normalized = query.toLowerCase().trim();
+  const hasGreeting =
+    /\b(hello|hi|hey|good morning|good afternoon|good evening|namaste|namaskar)\b/.test(normalized);
+  const alsoContainsRequest =
+    /job|jobs|work|worker|hire|payment|safety|otp|profile|apply|kaam|chahiye/.test(normalized) ||
+    services.some((service) =>
+      [service.slug, service.en, service.hi].some((name) =>
+        normalized.includes(name.toLowerCase()),
+      ),
+    );
+
+  if (!hasGreeting || alsoContainsRequest) return null;
+
+  const greeting = normalized.includes("good morning")
+    ? "Good morning"
+    : normalized.includes("good afternoon")
+      ? "Good afternoon"
+      : normalized.includes("good evening")
+        ? "Good evening"
+        : "Hi";
+
+  return {
+    answer:
+      lang === "hi"
+        ? "Namaste! Aaj main aapki kya madad kar sakta hoon? Main nearby jobs, trusted workers aur Anga app ke sawaalon mein help kar sakta hoon."
+        : `${greeting}! What would you like to do today? I can help you find nearby jobs, compare trusted workers, or answer questions about Anga.`,
+    sources: [],
+    suggestions: defaultSuggestions(lang),
+  };
 }
 
 function buildKnowledge(lang: Lang): RagSource[] {

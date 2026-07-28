@@ -230,7 +230,7 @@ function WorkerHome() {
               />
               <div className="min-w-0">
                 <h1 className="worker-profile-name truncate text-base leading-tight">
-                  {workerName}
+                  Hi, {workerName}
                 </h1>
                 <button
                   type="button"
@@ -301,14 +301,14 @@ function WorkerHome() {
               skills
             </p>
             <div className="relative mt-5 flex items-center gap-2.5">
-              <div className="flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-full bg-card px-2 shadow-lg shadow-primary/10">
+              <div className="flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-full bg-card p-0.5 pr-3 shadow-lg shadow-primary/10">
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-md shadow-primary/20">
                   <Search className="h-[18px] w-[18px]" />
                 </span>
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search your dream jobs"
+                  placeholder="Search nearby jobs on Anga"
                   className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 />
               </div>

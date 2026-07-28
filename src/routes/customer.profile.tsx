@@ -16,6 +16,7 @@ import {
   Pencil,
   Phone,
   Plus,
+  RefreshCw,
   ShieldAlert,
   ShieldCheck,
   Star,
@@ -26,11 +27,12 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import { ProfilePageSkeleton } from "@/components/AppLoadingSkeletons";
 import { BottomNav } from "@/components/BottomNav";
 import { PageShell } from "@/components/PageShell";
 import { api, type ApiCustomerProfile, type ApiJob, type ApiNotification } from "@/lib/api";
 import { useT } from "@/lib/i18n";
-import { getProfile, logoutLocal } from "@/lib/session";
+import { logoutLocal } from "@/lib/session";
 
 export const Route = createFileRoute("/customer/profile")({
   head: () => ({ meta: [{ title: "Anga - Profile" }] }),
@@ -43,28 +45,45 @@ function Profile() {
   const [profile, setProfile] = useState<ApiCustomerProfile | null>(null);
   const [jobs, setJobs] = useState<ApiJob[]>([]);
   const [notifications, setNotifications] = useState<ApiNotification[]>([]);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [profileError, setProfileError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    const cachedProfile = getProfile("customer");
-    if (cachedProfile) setProfile(profileFromCache(cachedProfile));
+    let active = true;
+    setLoadingProfile(true);
+    setProfileError("");
 
-    api
-      .profile()
-      .then((result) => setProfile(result.profile as ApiCustomerProfile | null))
-      .catch(() => {
-        // Cached onboarding data keeps profile useful during API cold starts.
-      });
+    Promise.allSettled([api.profile(), api.jobs("?mine=true"), api.notifications()]).then(
+      ([profileResult, jobsResult, notificationsResult]) => {
+        if (!active) return;
 
-    api
-      .jobs("?mine=true")
-      .then((result) => setJobs(result.jobs))
-      .catch(() => setJobs([]));
+        if (profileResult.status === "fulfilled") {
+          const customerProfile = profileResult.value.profile as ApiCustomerProfile | null;
+          setProfile(customerProfile);
+          if (!customerProfile)
+            setProfileError("Your customer profile has not been completed yet.");
+        } else {
+          setProfile(null);
+          setProfileError(
+            profileResult.reason instanceof Error
+              ? profileResult.reason.message
+              : "Could not load your profile.",
+          );
+        }
 
-    api
-      .notifications()
-      .then((result) => setNotifications(result.notifications))
-      .catch(() => setNotifications([]));
-  }, []);
+        setJobs(jobsResult.status === "fulfilled" ? jobsResult.value.jobs : []);
+        setNotifications(
+          notificationsResult.status === "fulfilled" ? notificationsResult.value.notifications : [],
+        );
+        setLoadingProfile(false);
+      },
+    );
+
+    return () => {
+      active = false;
+    };
+  }, [reloadKey]);
 
   const completion = useMemo(() => getProfileCompletion(profile), [profile]);
   const activeJobs = jobs.filter((job) => job.status === "open" || job.status === "assigned");
@@ -80,6 +99,45 @@ function Profile() {
     navigate({ to: "/login" });
   };
 
+  if (loadingProfile) {
+    return (
+      <PageShell title={t("profile")} back="/customer" bottomNav={<BottomNav role="customer" />}>
+        <ProfilePageSkeleton />
+      </PageShell>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <PageShell title={t("profile")} back="/customer" bottomNav={<BottomNav role="customer" />}>
+        <section className="mt-5 rounded-[1.75rem] border border-border bg-card p-6 text-center shadow-sm">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-primary">
+            <RefreshCw className="h-6 w-6" />
+          </div>
+          <h2 className="mt-4 text-lg font-black">Profile unavailable</h2>
+          <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-muted-foreground">
+            {profileError || "We could not load your customer profile."}
+          </p>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setReloadKey((value) => value + 1)}
+              className="min-h-11 rounded-full border border-primary bg-card px-4 text-sm text-primary"
+            >
+              Try again
+            </button>
+            <Link
+              to="/customer/setup"
+              className="grid min-h-11 place-items-center rounded-full bg-primary px-4 text-sm text-primary-foreground"
+            >
+              Set up profile
+            </Link>
+          </div>
+        </section>
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell title={t("profile")} back="/customer" bottomNav={<BottomNav role="customer" />}>
       <div className="space-y-4 pb-3">
@@ -91,9 +149,7 @@ function Profile() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="truncate text-2xl font-black leading-tight">
-                  {profile?.name || "Customer"}
-                </h2>
+                <h2 className="truncate text-2xl font-black leading-tight">{profile.name}</h2>
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/18 px-2 py-1 text-[10px] font-black uppercase">
                   <BadgeCheck className="h-3.5 w-3.5" />
                   Trusted
@@ -101,13 +157,13 @@ function Profile() {
               </div>
               <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-primary-foreground/82">
                 <Star className="h-4 w-4 fill-amber-300 text-amber-300" />
-                {profile?.rating ?? 4.8} hiring rating
+                {profile.rating} hiring rating
                 <span className="opacity-60">·</span>
                 {customerType}
               </p>
               <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-primary-foreground/75">
                 <MapPin className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{profile?.address || "Add hiring location"}</span>
+                <span className="truncate">{profile.address || "Location not added"}</span>
               </p>
             </div>
           </div>
@@ -157,8 +213,12 @@ function Profile() {
         </section>
 
         <section className="rounded-[1.5rem] border border-border bg-card shadow-sm">
-          <DetailRow label={t("phone")} value={profile?.phone || "-"} icon={<Phone />} />
-          <DetailRow label={t("address")} value={profile?.address || "-"} icon={<MapPin />} />
+          <DetailRow label={t("phone")} value={profile.phone || "Not added"} icon={<Phone />} />
+          <DetailRow
+            label={t("address")}
+            value={profile.address || "Not added"}
+            icon={<MapPin />}
+          />
           <DetailRow label={t("ownerType")} value={customerType} icon={<Home />} last />
         </section>
 
@@ -200,6 +260,7 @@ function Profile() {
             title="Verified workers"
             text="Hire workers with ratings, documents and trust badges."
             badge="Recommended"
+            to="/customer"
           />
           <OptionRow
             icon={<FileText />}
@@ -211,13 +272,13 @@ function Profile() {
             icon={<CreditCard />}
             title="Payment preferences"
             text="Keep budgets clear with cash or UPI payment notes."
-            onClick={() => toast.message("Payment settings coming soon")}
+            to="/settings/preferences"
           />
           <OptionRow
             icon={<Bookmark />}
             title="Saved workers"
             text="Shortlist good workers for future jobs."
-            onClick={() => toast.message("Saved workers coming soon")}
+            to="/customer/saved"
           />
         </section>
 
@@ -227,7 +288,7 @@ function Profile() {
             icon={<ShieldAlert />}
             title={t("reportIssue")}
             text="Report worker, job, payment or safety issues."
-            onClick={() => toast(t("reportIssue"))}
+            to="/assistant"
           />
           <OptionRow
             icon={<LifeBuoy />}
@@ -239,13 +300,13 @@ function Profile() {
             icon={<Languages />}
             title="Language"
             text="Hindi and English support for local hiring."
-            onClick={() => toast.message("Use the language toggle on the welcome screen")}
+            to="/settings/preferences"
           />
           <OptionRow
             icon={<WalletCards />}
             title="Budget guidance"
             text="Get suggested daily wages by job type and area."
-            onClick={() => toast.message("Anga shows wage estimates while posting jobs")}
+            to="/assistant"
           />
           <OptionRow
             icon={<CircleHelp />}
@@ -424,21 +485,9 @@ function getProfileCompletion(profile: ApiCustomerProfile | null) {
   return Math.round((checks.filter(Boolean).length / checks.length) * 100);
 }
 
-function profileFromCache(profile: Record<string, unknown>): ApiCustomerProfile {
-  return {
-    _id: "",
-    userId: "",
-    name: String(profile.name || ""),
-    phone: String(profile.phone || ""),
-    address: String(profile.address || profile.location || ""),
-    customerType: String(profile.customerType || "homeowner"),
-    rating: Number(profile.rating || 4.8),
-  };
-}
-
 function formatCustomerType(type?: string) {
   if (type === "shop_owner") return "Shop owner";
   if (type === "contractor") return "Contractor";
   if (type === "homeowner") return "Homeowner";
-  return type || "Customer";
+  return type || "Not specified";
 }

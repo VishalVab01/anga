@@ -288,7 +288,7 @@ function Landing() {
     <main className="zentivo-landing min-h-screen overflow-hidden text-foreground">
       <section className="zentivo-hero relative min-h-screen overflow-hidden">
         <header className="zentivo-nav-wrap">
-          <a href="#" className="zentivo-brand-pill" aria-label="Anga home">
+          <a href="/" className="zentivo-brand-pill" aria-label="Anga home">
             <img className="brand-mark" src="/playstore.png" alt="" />
             <span>anga</span>
           </a>
@@ -299,10 +299,15 @@ function Landing() {
               </a>
             ))}
           </nav>
-          <button type="button" className="nav-cta">
-            Download Now
-            <ArrowUpRight className="h-5 w-5" />
-          </button>
+          <a href="/app" className="nav-cta">
+            <span className="button-label-roller">
+              <span className="button-label-track">
+                <span>Download Now</span>
+                <span aria-hidden="true">Download Now</span>
+              </span>
+            </span>
+            <ArrowUpRight className="nav-cta-arrow h-5 w-5" />
+          </a>
         </header>
 
         <CloudLayer />
@@ -317,7 +322,7 @@ function Landing() {
           </p>
 
           <div className="hero-actions mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <button type="button" className="hero-primary">
+            <a href="/app" className="hero-primary">
               <span className="button-label-roller">
                 <span className="button-label-track">
                   <span>Download Now</span>
@@ -325,7 +330,7 @@ function Landing() {
                 </span>
               </span>
               <Download className="hero-button-icon h-5 w-5" />
-            </button>
+            </a>
             <button type="button" onClick={() => setDemoMode(true)} className="hero-secondary">
               <span className="ai-icon-wrap">
                 <Sparkles className="hero-ai-icon h-6 w-6" />
@@ -370,7 +375,7 @@ function Landing() {
                     <BatteryMedium />
                   </span>
                 </span>
-                <img src="/hero-app-screen.png" alt="" />
+                <img src="/demo/worker-home-hero.png" alt="" />
               </span>
             </div>
 
@@ -420,8 +425,19 @@ function Landing() {
               ))}
             </div>
 
-            <div className="features-phone-panel" aria-hidden="true">
+            <div
+              className="features-phone-panel"
+              role="img"
+              aria-label="Anga AI assistant displayed inside the mobile app"
+            >
               <img src="/feature-phone-blank.png" alt="" className="features-phone-cloud-image" />
+              <div className="features-phone-screen">
+                <img
+                  src="/demo/anga-ai-assistant.png"
+                  alt=""
+                  className="features-phone-screen-image"
+                />
+              </div>
             </div>
 
             <div className="features-side-stack">
@@ -442,10 +458,10 @@ function Landing() {
                 Create a trusted profile, match nearby, then apply or assign local daily-wage work
                 with clear wages and trust signals.
               </p>
-              <button type="button" className="hero-primary">
+              <a href="/app" className="hero-primary">
                 Download Now
                 <Download className="h-4 w-4" />
-              </button>
+              </a>
             </div>
 
             <div className="workflow-timeline-visual" aria-hidden="true">
@@ -706,7 +722,12 @@ function Landing() {
       </section>
 
       <section className="zentivo-final-cta relative">
-        <CloudLayer />
+        <img
+          className="final-cta-background"
+          src="/zentivo-cta-sky.png"
+          alt=""
+          aria-hidden="true"
+        />
         <div className="final-cta-inner">
           <div className="final-cta-copy">
             <h2>Ready to Work Smarter with AI?</h2>
@@ -730,7 +751,19 @@ function Landing() {
           </div>
 
           <div className="final-cta-device" aria-hidden="true">
-            <img src="/anga-phone-hand.png" alt="" />
+            <img src="/anga-phone-hand-blank.png" alt="" className="hero-device-frame" />
+            <span className="hero-device-screen">
+              <span className="hero-phone-status">
+                <span className="hero-phone-time">9:41</span>
+                <span className="hero-phone-island" />
+                <span className="hero-phone-indicators">
+                  <Signal />
+                  <Wifi />
+                  <BatteryMedium />
+                </span>
+              </span>
+              <img src="/demo/anga-ai-assistant.png" alt="" className="final-cta-app-screen" />
+            </span>
           </div>
         </div>
       </section>
@@ -739,7 +772,7 @@ function Landing() {
         <div className="footer-inner">
           <div className="footer-top">
             <div className="footer-brand-block">
-              <a href="#" className="footer-brand" aria-label="Anga home">
+              <a href="/" className="footer-brand" aria-label="Anga home">
                 <img src="/playstore.png" alt="" />
                 <span>anga</span>
               </a>
@@ -888,13 +921,31 @@ function FooterColumn({ title, items }: { title: string; items: string[] }) {
       <p>{title}</p>
       <div>
         {items.map((item) => (
-          <a key={item} href="#">
+          <a key={item} href={footerHref(item)}>
             {item}
           </a>
         ))}
       </div>
     </div>
   );
+}
+
+function footerHref(item: string) {
+  const links: Record<string, string> = {
+    Features: "#features",
+    Demo: "/app",
+    "Worker App": "/auth/login",
+    "Customer App": "/auth/login",
+    "AI Assistant": "/assistant",
+    Trust: "#features",
+    Safety: "#faq",
+    FAQ: "#faq",
+    About: "#impact",
+    Hackathon: "#impact",
+    Contact: "#faq",
+    Rozgar: "#solutions",
+  };
+  return links[item] || "/app";
 }
 
 function useLandingAnimations(demoMode: boolean) {
@@ -1183,7 +1234,7 @@ function useLandingAnimations(demoMode: boolean) {
           scrollTrigger: {
             trigger: ".footer-wordmark",
             start: "top 92%",
-            once: true,
+            toggleActions: "play none none reverse",
           },
         },
       );
