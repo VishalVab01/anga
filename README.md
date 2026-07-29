@@ -1,225 +1,169 @@
-# anga
+# Anga
 
-Find daily work. Hire trusted local workers.
+### AI-powered local Rozgar for workers and customers
 
-anga is a Rozgar category hackathon project for local daily-wage employment. It helps workers such as electricians, plumbers, carpenters, painters, AC repair workers, drivers, house helpers, delivery workers, and labourers find nearby jobs, while helping customers hire trusted local workers with clear wages, ratings, verification signals, and simple mobile-first flows.
+Anga is a mobile-first employment platform for daily-wage and local-service work. It helps workers discover nearby jobs with clear pay, timing, and location details, while helping customers find, compare, and hire trusted local workers.
 
-The project includes a polished landing website with a real interactive phone mockup, a mobile app experience, OTP-based authentication, worker/customer onboarding, job posting and application flows, applicant review, notifications, and an in-app RAG-style Rozgar assistant.
+The current project is a working full-stack MVP built for **Build for Good 2026** by **Team Waffles**. It includes an animated product website, an interactive phone demo, worker and customer applications, dual authentication flows, MongoDB-backed APIs, trust tools, and a relevance-aware AI Rozgar assistant.
 
-## Hackathon Pitch
+<p align="center">
+  <img src="public/demo/workspace-assistant-screen.png" alt="Anga AI assistant showing relevant nearby jobs" width="320" />
+</p>
 
-Many daily-wage workers still depend on word of mouth, middlemen, and uncertain payments to find work. Customers also struggle to quickly find trusted local workers with transparent rates and basic verification.
+## Current Progress
 
-anga solves this by creating a local-first employment platform focused on:
+| Area                | Status     | Current implementation                                                                                            |
+| ------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------- |
+| Product website     | Ready      | Responsive landing page, GSAP/Lenis animations, mentor testimonial, FAQs, and product sections                    |
+| Interactive demo    | Ready      | The real app runs inside a responsive phone mockup on a full-viewport cloud stage                                 |
+| Authentication      | Working    | Email/password, mobile OTP, role selection, forgot-password entry point, and one-click demo accounts              |
+| Worker experience   | Working    | Profile setup, nearby jobs, job details, applications, saved jobs, notifications, and availability                |
+| Customer experience | Working    | Profile photo, job posting, service discovery, requests, applicants, saved workers, and assignment flows          |
+| AI assistant        | Working    | Command-aware job/worker matching, ranked sources, contextual actions, and English/Hindi suggestions              |
+| Backend             | Working    | Express APIs, MongoDB/Mongoose models, JWT sessions, OTP records, profiles, jobs, applications, and notifications |
+| Android packaging   | Configured | Capacitor Android build and sync scripts are available                                                            |
+| Production services | Planned    | Real SMS delivery, production maps/distance, payments, push notifications, and moderation                         |
 
-- Nearby daily-wage jobs instead of generic service booking.
-- Mobile OTP login for simple access.
-- Worker and customer role-based flows.
-- Transparent wage, distance, timing, status, and rating signals.
-- Verified and document-uploaded badges for trust.
-- Hindi and English friendly UI for local users.
-- AI assistance for finding jobs, hiring workers, and understanding app actions.
+## The Problem
 
-## Live Demo Flow For Judges
+Many local and daily-wage workers still depend on word of mouth, middlemen, and uncertain payment terms to find work. Customers face the opposite problem: finding someone nearby who is available, fairly priced, skilled, and trustworthy can take too long.
 
-Judges do not need a real phone number.
+Anga brings both sides into one local-first workflow:
 
-Use these demo credentials:
+- nearby work instead of generic listings;
+- clear wage, distance, date, timing, and urgency information;
+- worker skills, experience, availability, ratings, photos, and trust signals;
+- customer job posts with budgets, requirements, and problem photos;
+- direct application, applicant review, assignment, and status tracking;
+- AI guidance that responds to the user's actual command.
+
+## Current Product Experience
+
+### Interactive website and live demo
+
+- Animated, responsive product website built around Anga's blue-and-white visual system.
+- Full-screen cloud demo stage using the same visual treatment as the final landing CTA.
+- Interactive application embedded inside a CSS-rendered phone mockup.
+- Adaptive phone status bar that follows the app screen color.
+- Product workspace preview, AI assistant imagery, and a testimonial from Suhas Vitthal Powar, Mentor — Build for Good 2026.
+- Smooth GSAP and Lenis motion with reduced-motion support.
+
+### Authentication
+
+- Dedicated login and signup screens.
+- Email and password registration/login.
+- Mobile number and OTP authentication.
+- Worker/customer role-aware routing.
+- Demo Worker and Demo Customer buttons for judge-friendly access.
+- Existing users return to the correct dashboard; incomplete profiles continue to setup.
+
+### Worker journey
+
+- Build a profile with name, area, skills, experience, expected wage, availability, work distance, photo, and optional document.
+- Browse live nearby jobs with relevant seeded fallback data when the API is unavailable.
+- Compare wage, distance, timing, location, customer rating, and verification signals.
+- Open complete job details, view issue photos, apply, and track application status.
+- Save jobs for later.
+- Manage profile, notifications, language, payment preferences, and safety settings.
+
+### Customer journey
+
+- Build a customer profile with name, location, customer type, and profile photo.
+- Browse services and nearby workers.
+- Post a job with service, description, date, time, location, budget, urgency, worker count, and problem photo.
+- Review requests and compare applicants by skill, rating, experience, distance, wage, availability, and verification.
+- Open worker profiles, save workers, call, and assign.
+- Manage notifications and preferences from the customer profile.
+
+### AI Rozgar assistant
+
+Anga includes a dedicated assistant at `/assistant` plus contextual assistant access from the app.
+
+The assistant currently:
+
+- recognizes job-search, worker-hiring, verification, safety, payment, greeting, and app-help intents;
+- filters results by requested service, date, availability, and trust requirements;
+- sorts requests such as closest, highest-paying, lowest-cost, or highest-rated;
+- returns only relevant job, worker, request, help, or safety sources;
+- provides direct actions to the appropriate Anga screen;
+- avoids repeating unrelated cards when the user's command cannot be grounded;
+- supports simple English and Hindi/Hinglish prompts.
+
+Example prompts:
+
+```text
+Show me nearby electrician jobs available today
+Which job pays the most?
+Find a verified plumber available today
+Mujhe aaj electrician ka kaam chahiye
+How do I keep payment safe?
+```
+
+### Trust and safety
+
+- Profile photos and worker documents.
+- Verified and document-uploaded signals.
+- Ratings, experience, completed-job context, and transparent wages.
+- Report issue and SOS actions for accepted work.
+- Payment, material-cost, and extra-charge guidance.
+- Clear application and job status tracking.
+
+## Demo Access
+
+The fastest route is to open the landing page and choose **Try Live Demo**, then use **Demo Worker** or **Demo Customer** on the login screen.
+
+For the local OTP flow:
 
 ```text
 Mobile number: 1234567890
 OTP: 1234
 ```
 
-Recommended demo path:
+Recommended judge flow:
 
-1. Open the landing page at `/`.
-2. Notice the interactive phone mockup in the hero section.
-3. Click `Try Demo` to focus only on the phone app.
-4. Choose `Create account` or `Log in`.
-5. Select a role: Worker or Customer.
-6. Enter `1234567890`.
-7. Use OTP `1234`.
-8. Complete onboarding.
-9. Try the worker dashboard, customer dashboard, AI assistant, job detail, post job, applicants, notifications, and profile flows.
-
-## Core Features
-
-### Landing Website
-
-- Modern hackathon/demo website for the Anga project.
-- Cream/off-white background, blue primary color, soft shadows, rounded UI.
-- Interactive phone mockup that runs the real app routes.
-- Full-screen demo mode with a back-to-home control.
-- "Try it here" floating cue so visitors understand the phone is interactive.
-- Sections: Hero, Why Anga, AI Rozgar Assistant, How it works, Features, Impact.
-- Demo credentials card for judges.
-
-### Authentication
-
-- Mobile number + OTP authentication.
-- No email/password flow.
-- Role-aware login and signup.
-- Existing users are routed to the correct dashboard.
-- New or incomplete users are routed to onboarding.
-- Development OTP is `1234`.
-
-### Worker Onboarding
-
-Worker profile setup includes:
-
-- Name
-- Phone
-- Location/area
-- Skills multi-select
-- Experience
-- Expected daily wage
-- Available today toggle
-- Preferred work distance
-- Photo upload
-- Optional document upload
-- CTA to start finding jobs
-
-### Customer Onboarding
-
-Customer profile setup includes:
-
-- Name
-- Phone
-- Address/location
-- Homeowner, shop owner, or contractor type
-- CTA to start hiring
-
-### Worker Job Flow
-
-- Nearby job cards with wage, distance, timing, customer rating, location, and status.
-- Job detail screen with full work details, payment, distance, customer profile, requirements, and apply action.
-- Application statuses: Pending, Accepted, Rejected, Completed.
-- Safety actions such as report issue and SOS after accepted jobs.
-
-### Customer Hiring Flow
-
-- Post Job form with service type, description, location, date/time, budget, urgency, and number of workers.
-- My Requests screen for posted jobs.
-- Applicants screen with worker cards showing skill, rating, experience, distance, wage, verification status, call, and assign actions.
-- Worker profile detail screen.
-
-### AI Rozgar Assistant
-
-anga includes two assistant experiences:
-
-1. Dedicated `/assistant` route for structured job search and hiring intent parsing.
-2. Floating in-app RAG-style chatbot that appears after login and onboarding.
-
-The RAG chatbot answers using Anga's local knowledge base:
-
-- Demo jobs
-- Worker profiles
-- Customer requests
-- App help content
-- OTP/login guidance
-- Payment and trust/safety guidance
-
-Example queries:
-
-```text
-Mujhe aaj electrician ka kaam chahiye
-Mujhe kal plumber chahiye sink repair ke liye
-How do I find verified workers?
-How do I keep payment safe?
-```
-
-The assistant returns grounded answers with source cards and links to relevant app screens.
-
-### Trust And Safety
-
-- Verified badges
-- Ratings
-- Document uploaded badge
-- Report issue button
-- SOS button after job acceptance
-- Transparent wage and payment type display
-- Customer and worker profile details
+1. Open `/` and launch the live demo.
+2. Continue through `/app` or go directly to login/signup.
+3. Enter with a demo worker or customer account.
+4. Explore the relevant dashboard and profile.
+5. Try a nearby-job or worker request in `/assistant`.
+6. Test job details/applications as a worker or job posting/applicants as a customer.
 
 ## Tech Stack
 
 ### Frontend
 
 - React 19
-- TanStack Router / TanStack Start
-- Vite
-- Tailwind CSS
-- Lucide React icons
-- GSAP animations
-- Sonner toasts
+- TanStack Start, TanStack Router, and TanStack Query
+- Vite 8
+- Tailwind CSS 4
+- GSAP and ScrollTrigger
+- Lenis smooth scrolling
+- Lucide React
+- Sonner notifications
+- Capacitor Android
 
 ### Backend
 
-- Node.js
-- Express
-- MongoDB
-- Mongoose
+- Node.js and Express 5
+- MongoDB and Mongoose
 - JWT authentication
-- OTP records with expiry
-- Role-based API protection
+- Password hashing with Node.js `crypto.scrypt`
+- OTP records with expiration
+- Role-protected profile, job, application, worker, and notification APIs
 
-### Database Models
+## Main Routes
 
-- User
-- OTP
-- WorkerProfile
-- CustomerProfile
-- Job
-- Application
-- Notification
+### Website and entry
 
-## Project Structure
-
-```text
-src/
-  components/
-    AppEntry.tsx
-    AppShell.tsx
-    BottomNav.tsx
-    LocationAutocomplete.tsx
-    PageShell.tsx
-    PhoneMockup.tsx
-    RagChatbot.tsx
-  lib/
-    api.ts
-    data.ts
-    i18n.tsx
-    ragAssistant.ts
-    session.ts
-  routes/
-    index.tsx
-    app.tsx
-    assistant.tsx
-    auth.phone.tsx
-    auth.otp.tsx
-    worker.*
-    customer.*
-server/
-  config/
-  middleware/
-  models/
-  routes/
-  seed.js
-  server.js
-```
-
-## Routes
-
-### Website
-
-- `/` - Landing website with interactive phone mockup
-- `/app` - Mobile app welcome experience
-- `/login` - Login redirect
-- `/signup` - Signup redirect
+- `/` — product website and interactive live demo
+- `/app` — splash and onboarding entry
+- `/login` and `/signup` — compatibility redirects
+- `/role-selection` — worker/customer selection
 
 ### Authentication
 
-- `/role-selection`
+- `/auth/login`
+- `/auth/signup`
 - `/auth/phone`
 - `/auth/otp`
 
@@ -229,6 +173,7 @@ server/
 - `/worker/setup`
 - `/worker/job/$id`
 - `/worker/applications`
+- `/worker/saved`
 - `/worker/notifications`
 - `/worker/profile`
 
@@ -236,16 +181,35 @@ server/
 
 - `/customer`
 - `/customer/setup`
+- `/customer/service/$slug`
 - `/customer/request`
 - `/customer/my-requests`
-- `/customer/request/$id/applicants`
+- `/customer/applicants/$id`
 - `/customer/worker/$id`
+- `/customer/saved`
 - `/customer/notifications`
 - `/customer/profile`
 
-### Assistant
+### Shared
 
 - `/assistant`
+- `/settings/preferences`
+
+## Project Structure
+
+```text
+src/
+  components/       Shared app shells, navigation, authentication, phone demo, and UI
+  lib/              API client, session state, seed data, saved items, i18n, and RAG logic
+  routes/           TanStack file routes for the website, auth, worker, customer, and assistant
+server/
+  config/           Database setup
+  middleware/       JWT and role authorization
+  models/           User, OTP, profiles, jobs, applications, and notifications
+  routes/           Auth, profile, jobs, workers, applications, and notifications APIs
+  seed.js           Development/demo data
+public/demo/         Landing and product-demo assets
+```
 
 ## Local Setup
 
@@ -255,17 +219,11 @@ server/
 npm install
 ```
 
-### 2. Configure environment
+### 2. Configure the environment
 
-Create a `.env` file from `.env.example`.
+Copy `.env.example` to `.env` and provide:
 
-```bash
-cp .env.example .env
-```
-
-Required values:
-
-```text
+```env
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 NODE_ENV=development
@@ -274,84 +232,66 @@ VITE_API_URL=http://localhost:5000/api
 VITE_GOOGLE_MAPS_API_KEY=optional_google_maps_key
 ```
 
-### 3. Start frontend and backend
+### 3. Run the full application
 
 ```bash
 npm run dev
 ```
 
-This starts:
+This starts the Express API (default `http://localhost:5000`) and the Vite web application.
 
-- API server on `http://localhost:5000`
-- Vite app on the local dev port
-
-### 4. Build for production
+Useful individual commands:
 
 ```bash
+npm run dev:web
+npm run dev:api
 npm run build
+npm run lint
+npm run preview
 ```
 
-## API Overview
+### 4. Build the Android project
 
-### Auth
+```bash
+npm run android:sync
+```
 
-- `POST /api/auth/send-otp`
-- `POST /api/auth/verify-otp`
-- `GET /api/auth/me`
-- `POST /api/auth/logout`
+This creates the mobile build and synchronizes it with the configured Capacitor Android project.
 
-### Profile
+## API Areas
 
-- `GET /api/profile`
-- `PUT /api/profile/worker`
-- `PUT /api/profile/customer`
+- **Auth:** credential registration/login, send OTP, verify OTP, current user, logout
+- **Profiles:** worker and customer profile read/update, including photos and documents
+- **Jobs:** create, browse, update, delete, nearby results, details, applicants, assignment, completion
+- **Applications:** worker/customer application lists and status updates
+- **Workers:** worker discovery and profile details
+- **Notifications:** lists, read state, and bulk updates
 
-### Jobs
+## Current Limitations and Next Steps
 
-- `GET /api/jobs`
-- `GET /api/jobs/nearby`
-- `GET /api/jobs/:id`
-- `POST /api/jobs`
-- `POST /api/jobs/:id/apply`
-- `GET /api/jobs/:id/applicants`
-- `POST /api/jobs/:id/assign`
-- `POST /api/jobs/:id/complete`
+The current build is a functional MVP and hackathon demo. Before production release, the project still needs:
 
-### Other
-
-- `GET /api/applications/my`
-- `GET /api/notifications`
-- `GET /api/workers`
-
-## What Makes Anga Hackathon-Ready
-
-- Clear problem-solution fit for Rozgar and daily-wage employment.
-- Working end-to-end flows for both workers and customers.
-- Real backend with MongoDB persistence and JWT auth.
-- Mobile-first UI designed for local users.
-- Interactive website demo that lets judges use the app inside a phone mockup.
-- AI assistant that is grounded in app data, not just a generic chatbot.
-- Trust and safety features built into the product story.
-- Demo credentials make judging frictionless.
-
-## Future Scope
-
-- Real SMS provider integration for production OTP.
-- Google Maps Places and distance calculation in production.
-- Worker/customer location-based matching with geospatial indexes.
-- In-app chat between assigned worker and customer.
-- Payment tracking and receipt upload.
-- Admin moderation for reports and verification.
-- Push notifications.
-- Multilingual expansion beyond Hindi and English.
+- a real SMS provider and production OTP policy;
+- production-grade password recovery and email verification;
+- geospatial indexing and live travel-distance calculations;
+- payment collection, tracking, and receipts;
+- direct worker/customer messaging;
+- push notifications;
+- admin moderation, report handling, and document verification;
+- cloud object storage for uploaded photos/documents;
+- broader multilingual coverage and accessibility testing;
+- automated unit, integration, and end-to-end test coverage.
 
 ## Verification
 
-Current verification commands:
+The current production build is verified with:
 
 ```bash
-npx eslint src/routes/index.tsx
 npm run build
 ```
 
-The latest build passes successfully.
+The main landing, app, authentication, assistant, worker, and customer routes currently load successfully in the local preview.
+
+---
+
+Built by **Team Waffles** for **Build for Good 2026**.
