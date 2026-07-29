@@ -295,3 +295,5 @@ The main landing, app, authentication, assistant, worker, and customer routes cu
 ---
 
 Built by **Team Waffles** for **Build for Good 2026**.
+
+Onboarding illustrations are provided by [Storyset](https://storyset.com/) under the Freepik license.

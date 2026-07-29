@@ -186,6 +186,8 @@ const impact = [
 const mentorTestimonialQuote =
   "“Anga thoughtfully brings AI, local hiring and trust into one clear experience. It has strong potential to make daily-wage opportunities easier to discover and local workers easier to hire.”";
 
+const angaApkDownload = "/downloads/Anga.apk";
+
 const faqs = [
   {
     question: "What is Anga?",
@@ -263,7 +265,7 @@ function Landing() {
               </a>
             ))}
           </nav>
-          <a href="/app" className="nav-cta">
+          <a href={angaApkDownload} download="Anga.apk" className="nav-cta">
             <span className="button-label-roller">
               <span className="button-label-track">
                 <span>Download Now</span>
@@ -286,7 +288,7 @@ function Landing() {
           </p>
 
           <div className="hero-actions mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <a href="/app" className="hero-primary">
+            <a href={angaApkDownload} download="Anga.apk" className="hero-primary">
               <span className="button-label-roller">
                 <span className="button-label-track">
                   <span>Download Now</span>
@@ -422,7 +424,7 @@ function Landing() {
                 Create a trusted profile, match nearby, then apply or assign local daily-wage work
                 with clear wages and trust signals.
               </p>
-              <a href="/app" className="hero-primary">
+              <a href={angaApkDownload} download="Anga.apk" className="hero-primary">
                 Download Now
                 <Download className="h-4 w-4" />
               </a>
@@ -948,12 +950,23 @@ function useLandingAnimations(demoMode: boolean) {
 
       const hero = gsap.timeline({ defaults: { ease: "power3.out" } });
       hero
-        .fromTo(".zentivo-nav-wrap", { y: -18 }, { autoAlpha: 1, y: 0, duration: 0.55 })
+        .fromTo(
+          ".zentivo-nav-wrap",
+          { y: -24, scale: 0.985, filter: "blur(7px)" },
+          {
+            autoAlpha: 1,
+            y: 0,
+            scale: 1,
+            filter: "blur(0px)",
+            duration: 1.2,
+            ease: "power2.out",
+          },
+        )
         .fromTo(
           ".hero-title",
           { y: 34, scale: 0.88 },
           { autoAlpha: 1, y: 0, scale: 1, duration: 0.78, ease: "back.out(1.18)" },
-          "-=0.18",
+          "-=0.72",
         )
         .fromTo(
           ".hero-subtitle",
@@ -1199,6 +1212,51 @@ function useLandingAnimations(demoMode: boolean) {
         ease: "sine.inOut",
       });
 
+      const finalCtaTimeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: ".zentivo-final-cta",
+          start: "top 76%",
+          toggleActions: "play none none reverse",
+        },
+      });
+
+      finalCtaTimeline
+        .fromTo(
+          ".final-cta-copy h2",
+          { autoAlpha: 0, y: 48, filter: "blur(7px)" },
+          {
+            autoAlpha: 1,
+            y: 0,
+            filter: "blur(0px)",
+            duration: 0.95,
+            ease: "power3.out",
+          },
+        )
+        .fromTo(
+          ".final-cta-copy p",
+          { autoAlpha: 0, y: 28 },
+          { autoAlpha: 1, y: 0, duration: 0.75, ease: "power3.out" },
+          "-=0.58",
+        )
+        .fromTo(
+          ".final-cta-actions",
+          { autoAlpha: 0, y: 30, scale: 0.98 },
+          { autoAlpha: 1, y: 0, scale: 1, duration: 0.78, ease: "power3.out" },
+          "-=0.5",
+        )
+        .fromTo(
+          ".final-cta-device",
+          { autoAlpha: 0, y: 118, scale: 0.9 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            scale: 1,
+            duration: 1.15,
+            ease: "power4.out",
+          },
+          "-=0.52",
+        );
+
       gsap.fromTo(
         ".footer-top",
         {
@@ -1233,7 +1291,8 @@ function useLandingAnimations(demoMode: boolean) {
           scrollTrigger: {
             trigger: ".footer-wordmark",
             start: "top 92%",
-            toggleActions: "play none none reverse",
+            end: "top 70%",
+            toggleActions: "play none reverse none",
           },
         },
       );

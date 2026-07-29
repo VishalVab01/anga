@@ -1,8 +1,8 @@
 import type { Role } from "./session";
 
 const RAW_API_URL =
-  import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD ? "https://anga-s5vx.onrender.com/api" : "http://localhost:5000/api");
+  (import.meta.env.DEV ? "http://localhost:5000/api" : import.meta.env.VITE_API_URL) ||
+  "https://anga-s5vx.onrender.com/api";
 const API_URL = normalizeApiUrl(RAW_API_URL);
 
 function normalizeApiUrl(url: string) {

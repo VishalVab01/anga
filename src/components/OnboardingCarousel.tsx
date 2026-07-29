@@ -2,21 +2,21 @@ import { useRef, useState, type TouchEvent } from "react";
 
 const onboardingSlides = [
   {
-    image: "/onboarding/find-work.png",
+    image: "/onboarding/storyset-job-hunt.svg",
     alt: "A worker finding nearby jobs with Anga",
     title: "Find nearby work with ease",
     description:
       "Discover local daily-wage opportunities and apply directly to the jobs that suit your skills.",
   },
   {
-    image: "/onboarding/trusted-hiring.png",
+    image: "/onboarding/storyset-hiring.svg",
     alt: "A customer and worker completing a trusted hire",
     title: "Get hired by people nearby",
     description:
       "Build trust with a clear profile and connect directly with customers who need your help.",
   },
   {
-    image: "/onboarding/grow-income.png",
+    image: "/onboarding/storyset-growing.svg",
     alt: "A worker growing his income with better job matches",
     title: "Grow your income with Anga",
     description:
@@ -55,7 +55,7 @@ export function OnboardingCarousel({ onComplete }: { onComplete: () => void }) {
   return (
     <main className="anga-app-shell h-[100dvh] overflow-hidden overscroll-none bg-background text-foreground touch-pan-x">
       <div
-        className="mx-auto flex h-full min-h-0 max-w-md flex-col overflow-hidden overscroll-none"
+        className="relative mx-auto flex h-full min-h-0 max-w-md flex-col overflow-hidden overscroll-none"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -70,14 +70,15 @@ export function OnboardingCarousel({ onComplete }: { onComplete: () => void }) {
               aria-hidden={index !== activeSlide}
               inert={index !== activeSlide}
             >
-              <div className="flex h-[46dvh] max-h-[25rem] shrink-0 items-center justify-center pt-2">
+              <div className="onboarding-visual flex h-[46dvh] max-h-[25rem] shrink-0 items-center justify-center pt-2">
                 <img
                   src={slide.image}
                   alt={slide.alt}
-                  width={1536}
-                  height={1024}
+                  width={800}
+                  height={800}
                   draggable={false}
-                  className="max-h-[50dvh] w-[135%] max-w-none -translate-y-[0.375rem] select-none object-contain"
+                  decoding="async"
+                  className="onboarding-illustration max-h-[48dvh] w-[116%] max-w-none -translate-y-[0.25rem] select-none object-contain"
                 />
               </div>
 

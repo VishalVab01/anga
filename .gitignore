@@ -18,6 +18,7 @@ dist-mobile
 .tooling/
 .codex-reference/
 *.apk
+!public/downloads/Anga.apk
 *.local
 .env
 .env.*

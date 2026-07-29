@@ -6,6 +6,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   root: "mobile",
+  publicDir: resolve(__dirname, "public"),
   plugins: [react(), tailwindcss(), tsconfigPaths()],
   build: {
     outDir: "../dist-mobile",
