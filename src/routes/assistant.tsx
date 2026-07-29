@@ -67,6 +67,7 @@ function Assistant() {
   const [turns, setTurns] = useState<ConversationTurn[]>([]);
   const [pendingQuestion, setPendingQuestion] = useState("");
   const [latestIntent, setLatestIntent] = useState<AssistantIntent>("knowledge");
+  const [latestQuery, setLatestQuery] = useState("");
   const [ragSources, setRagSources] = useState<RagSource[]>([]);
   const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
 
@@ -84,8 +85,8 @@ function Assistant() {
 
   const fallbackJobMatches = useMemo(() => {
     const matches = jobs.filter((job) => !parsed.service || job.service === parsed.service);
-    return parsed.service ? matches : matches.slice(0, 4);
-  }, [parsed.service]);
+    return rankFallbackJobs(matches, latestQuery).slice(0, 4);
+  }, [latestQuery, parsed.service]);
 
   const suggestions =
     role === "worker"
@@ -146,6 +147,7 @@ function Assistant() {
     setMessage("");
     setParsed(next);
     setLatestIntent(intent);
+    setLatestQuery(question);
     setPendingQuestion(question);
     setRagSources([]);
     setFollowUpSuggestions([]);
@@ -171,7 +173,7 @@ function Assistant() {
         if (next.service) params.set("category", next.service);
         if (next.location) params.set("search", next.location);
         const result = await api.nearbyJobs(params.toString() ? `?${params}` : "");
-        setMatchingJobs(result.jobs);
+        setMatchingJobs(rankApiJobs(result.jobs, question));
         const fallbackCount = jobs.filter(
           (job) => !next.service || job.service === next.service,
         ).length;
@@ -187,7 +189,7 @@ function Assistant() {
         if (next.location) params.set("search", next.location);
         params.set("availableToday", "true");
         const result = await api.workers(params.toString() ? `?${params}` : "");
-        setMatchingWorkers(result.workers);
+        setMatchingWorkers(rankApiWorkers(result.workers, question));
         const fallbackCount = fallbackWorkers.filter(
           (worker) => !next.service || worker.skill === next.service,
         ).length;
@@ -427,6 +429,7 @@ function Assistant() {
                 <CustomerResults
                   workers={matchingWorkers}
                   parsed={parsed}
+                  query={latestQuery}
                   createDraftJob={createDraftJob}
                   loading={loading}
                 />
@@ -654,18 +657,21 @@ function KnowledgeResults({ sources }: { sources: RagSource[] }) {
 function CustomerResults({
   workers: liveWorkers,
   parsed,
+  query,
   createDraftJob,
   loading,
 }: {
   workers: ApiWorkerProfile[];
   parsed: ParsedRequest;
+  query: string;
   createDraftJob: () => void;
   loading: boolean;
 }) {
   const { t, lang } = useT();
-  const fallback = fallbackWorkers
-    .filter((worker) => !parsed.service || worker.skill === parsed.service)
-    .slice(0, 3);
+  const fallback = rankFallbackWorkers(
+    fallbackWorkers.filter((worker) => !parsed.service || worker.skill === parsed.service),
+    query,
+  ).slice(0, 3);
   const hasLive = liveWorkers.length > 0;
 
   return (
@@ -767,6 +773,70 @@ function EmptyText({ text }: { text: string }) {
       {text}
     </p>
   );
+}
+
+function rankApiJobs(items: ApiJob[], query: string) {
+  const ranked = [...items];
+  if (asksForHighestPay(query)) return ranked.sort((a, b) => b.wage - a.wage);
+  if (asksForLowestPay(query)) return ranked.sort((a, b) => a.wage - b.wage);
+  if (/urgent|jaldi|turant/i.test(query)) {
+    return ranked.sort((a, b) => Number(b.urgent) - Number(a.urgent));
+  }
+  return ranked;
+}
+
+function rankApiWorkers(items: ApiWorkerProfile[], query: string) {
+  const requested = /verified|trusted|document/i.test(query)
+    ? items.filter((worker) => worker.verified || worker.documentsUploaded)
+    : items;
+  const ranked = [...requested];
+  if (asksForLowestPay(query)) return ranked.sort((a, b) => a.expectedWage - b.expectedWage);
+  if (asksForHighestPay(query)) return ranked.sort((a, b) => b.expectedWage - a.expectedWage);
+  if (/best|top|rating|experienced/i.test(query)) {
+    return ranked.sort(
+      (a, b) => b.rating - a.rating || b.totalJobsCompleted - a.totalJobsCompleted,
+    );
+  }
+  return ranked;
+}
+
+function rankFallbackJobs(items: typeof jobs, query: string) {
+  const ranked = [...items];
+  if (asksForHighestPay(query)) return ranked.sort((a, b) => b.payment - a.payment);
+  if (asksForLowestPay(query)) return ranked.sort((a, b) => a.payment - b.payment);
+  if (/closest|nearest|nearby|near me|sabse paas/i.test(query)) {
+    return ranked.sort((a, b) => a.distanceKm - b.distanceKm);
+  }
+  if (/urgent|jaldi|turant/i.test(query)) {
+    return ranked.sort(
+      (a, b) => Number(/urgent/i.test(b.urgency.en)) - Number(/urgent/i.test(a.urgency.en)),
+    );
+  }
+  return ranked;
+}
+
+function rankFallbackWorkers(items: typeof fallbackWorkers, query: string) {
+  const requested = /verified|trusted|document/i.test(query)
+    ? items.filter((worker) => worker.verified || worker.documentUploaded)
+    : items;
+  const ranked = [...requested];
+  if (asksForLowestPay(query)) return ranked.sort((a, b) => a.expectedWage - b.expectedWage);
+  if (asksForHighestPay(query)) return ranked.sort((a, b) => b.expectedWage - a.expectedWage);
+  if (/closest|nearest|nearby|near me|sabse paas/i.test(query)) {
+    return ranked.sort((a, b) => a.distanceKm - b.distanceKm);
+  }
+  if (/best|top|rating|experienced/i.test(query)) {
+    return ranked.sort((a, b) => b.rating - a.rating);
+  }
+  return ranked;
+}
+
+function asksForHighestPay(query: string) {
+  return /highest|high paying|best pay|most pay|maximum|zyada|jyada/i.test(query);
+}
+
+function asksForLowestPay(query: string) {
+  return /lowest|low wage|least pay|cheapest|minimum|kam paisa/i.test(query);
 }
 
 function classifyAssistantIntent(

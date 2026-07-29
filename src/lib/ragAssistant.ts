@@ -100,9 +100,9 @@ export function answerWithRag(query: string, lang: Lang): RagAnswer {
     return {
       answer:
         lang === "hi"
-          ? "Mujhe is sawaal ka exact match nahi mila, lekin Anga mein aap jobs, verified workers, applications, payment clarity aur safety help dekh sakte hain."
-          : "I could not find an exact match, but Anga can help with jobs, verified workers, applications, payment clarity and safety support.",
-      sources: sources.slice(0, 2),
+          ? "Mujhe is command ka relevant Anga data nahi mila. Job, worker, location, skill, payment ya app feature ka naam likhkar thoda aur specific poochiye."
+          : "I could not find relevant Anga information for that command. Please be more specific—for example, include a job, worker, location, skill, payment, or app feature.",
+      sources: [],
       suggestions: defaultSuggestions(lang),
     };
   }
@@ -128,11 +128,18 @@ function answerByIntent(query: string, sources: RagSource[], lang: Lang): RagAns
     [service.slug, service.en, service.hi].some((name) => normalized.includes(name.toLowerCase())),
   );
   const wantsServiceJobs =
-    Boolean(requestedService) &&
-    /job|jobs|work|opening|vacancy|kaam|dikhao|show|find|chahiye/.test(normalized);
+    Boolean(requestedService) && /job|jobs|work|opening|vacancy|kaam|rozgar|apply/.test(normalized);
+  const wantsWorkers =
+    /worker|workers|hire|hiring|mazdoor|majdoor|mistri/.test(normalized) ||
+    (!wantsServiceJobs &&
+      Boolean(requestedService) &&
+      /need|find|show|chahiye|repair|fix|book|available|nearby|near me|trusted|verified/.test(
+        normalized,
+      ));
   const wantsTodayJobs =
     /today|aaj|आज|kaam chahiye|काम चाहिए|job|jobs|work/.test(normalized) &&
     /today|aaj|आज|show|dikhao|दिखाओ/.test(normalized);
+  const wantsJobs = /job|jobs|work|opening|openings|vacancy|vacancies|kaam|rozgar/.test(normalized);
   const wantsVerifiedWorkers =
     /verified|verify|trusted|badge|document|rating|भरोसे|वेरिफाइड/.test(normalized) &&
     /worker|workers|plumber|electrician|hire|मज़दूर|worker/.test(normalized);
@@ -140,13 +147,62 @@ function answerByIntent(query: string, sources: RagSource[], lang: Lang): RagAns
     /payment|pay|wage|cash|upi|safe|budget|पैसे|भुगतान|मजदूरी/.test(normalized) &&
     /safe|safety|secure|clarity|कैसे|how|रख/.test(normalized);
 
+  if (wantsWorkers) {
+    const serviceLabel = requestedService?.en;
+    let workerSources = sources.filter((source) => source.type === "worker");
+
+    if (serviceLabel) {
+      workerSources = workerSources.filter((source) =>
+        `${source.title} ${source.body}`.toLowerCase().includes(serviceLabel.toLowerCase()),
+      );
+    }
+    if (/available|today|aaj/.test(normalized)) {
+      workerSources = workerSources.filter((source) => /available today/i.test(source.body));
+    }
+    if (/verified|trusted|document/.test(normalized)) {
+      workerSources = workerSources.filter((source) =>
+        /verified worker|document uploaded/i.test(source.body),
+      );
+    }
+
+    workerSources = sortRequestedSources(workerSources, normalized).slice(0, 3);
+    const label = serviceLabel ? `${serviceLabel.toLowerCase()} workers` : "workers";
+
+    return {
+      answer:
+        workerSources.length > 0
+          ? lang === "hi"
+            ? `Aapki command ke hisaab se ${workerSources.length} relevant ${label} mile. Neeche rating, wage, distance aur availability compare karein.`
+            : `I found ${workerSources.length} relevant ${label} for your command. Compare their rating, wage, distance, and availability below.`
+          : lang === "hi"
+            ? `Aapki command se match karta hua ${label} abhi nahi mila. Skill, location ya availability badal kar poochiye.`
+            : `I could not find ${label} matching your command. Try changing the skill, location, or availability.`,
+      sources: workerSources,
+      suggestions:
+        lang === "hi"
+          ? [
+              "Available today workers dikhao",
+              "Sabse paas ka worker kaun hai?",
+              "Expected wage kya hai?",
+            ]
+          : [
+              "Show workers available today",
+              "Which worker is closest?",
+              "What is the expected wage?",
+            ],
+    };
+  }
+
   if (requestedService && wantsServiceJobs) {
     const serviceLabel = requestedService.en;
-    const jobSources = sources.filter(
-      (source) =>
-        source.type === "job" &&
-        `${source.title} ${source.body}`.toLowerCase().includes(serviceLabel.toLowerCase()),
-    );
+    const jobSources = sortRequestedSources(
+      sources.filter(
+        (source) =>
+          source.type === "job" &&
+          `${source.title} ${source.body}`.toLowerCase().includes(serviceLabel.toLowerCase()),
+      ),
+      normalized,
+    ).slice(0, 3);
 
     return {
       answer:
@@ -158,6 +214,32 @@ function answerByIntent(query: string, sources: RagSource[], lang: Lang): RagAns
         lang === "hi"
           ? ["Aaj ke jobs dikhao", "Sabse paas ka job kaunsa hai?", "Apply kaise karu?"]
           : ["Show today's jobs", "Which job is closest?", "How do I apply?"],
+    };
+  }
+
+  if (wantsJobs) {
+    let jobSources = sources.filter((source) => source.type === "job");
+    if (wantsTodayJobs) {
+      jobSources = jobSources.filter(
+        (source) => /today|aaj/i.test(source.body) || source.body.includes("Today"),
+      );
+    }
+    jobSources = sortRequestedSources(jobSources, normalized).slice(0, 3);
+
+    return {
+      answer:
+        jobSources.length > 0
+          ? lang === "hi"
+            ? `Aapki command ke hisaab se ${jobSources.length} relevant jobs mile. Neeche pay, location, distance aur timing compare karein.`
+            : `I found ${jobSources.length} jobs relevant to your command. Compare their pay, location, distance, and timing below.`
+          : lang === "hi"
+            ? "Aapki command se match karta hua job abhi nahi mila. Skill, location ya date badal kar poochiye."
+            : "I could not find a job matching your command. Try changing the skill, location, or date.",
+      sources: jobSources,
+      suggestions:
+        lang === "hi"
+          ? ["Sabse zyada payment wala job", "Sabse paas ka job", "Electrician jobs dikhao"]
+          : ["Show the highest-paying job", "Show the closest job", "Show electrician jobs"],
     };
   }
 
@@ -236,6 +318,40 @@ function answerByIntent(query: string, sources: RagSource[], lang: Lang): RagAns
   }
 
   return null;
+}
+
+function sortRequestedSources(items: RagSource[], query: string) {
+  const sorted = [...items];
+
+  if (/highest|most pay|best pay|high paying|maximum|zyada|jyada/.test(query)) {
+    return sorted.sort((a, b) => sourceMoney(b) - sourceMoney(a));
+  }
+  if (/lowest|least pay|cheapest|low wage|minimum|kam paisa/.test(query)) {
+    return sorted.sort((a, b) => sourceMoney(a) - sourceMoney(b));
+  }
+  if (/closest|nearest|nearby|near me|sabse paas/.test(query)) {
+    return sorted.sort((a, b) => sourceDistance(a) - sourceDistance(b));
+  }
+  if (/best|top|highest rated|rating/.test(query)) {
+    return sorted.sort((a, b) => sourceRating(b) - sourceRating(a));
+  }
+
+  return sorted;
+}
+
+function sourceMoney(source: RagSource) {
+  const match = `${source.title} ${source.body}`.match(/(?:₹|â‚¹)(\d[\d,]*)/);
+  return match ? Number(match[1].replace(/,/g, "")) : 0;
+}
+
+function sourceDistance(source: RagSource) {
+  const match = source.body.match(/(\d+(?:\.\d+)?)\s*km/i);
+  return match ? Number(match[1]) : Number.POSITIVE_INFINITY;
+}
+
+function sourceRating(source: RagSource) {
+  const match = source.body.match(/rating\s+(\d+(?:\.\d+)?)/i);
+  return match ? Number(match[1]) : 0;
 }
 
 function answerGreeting(query: string, lang: Lang): RagAnswer | null {
@@ -334,8 +450,37 @@ function buildKnowledge(lang: Lang): RagSource[] {
 }
 
 function rankSources(query: string, sources: RagSource[]) {
-  const tokens = tokenize(query);
-  if (tokens.length === 0) return sources.slice(0, 3);
+  const ignoredTokens = new Set([
+    "a",
+    "an",
+    "the",
+    "is",
+    "are",
+    "i",
+    "me",
+    "my",
+    "to",
+    "for",
+    "of",
+    "in",
+    "on",
+    "show",
+    "tell",
+    "give",
+    "please",
+    "can",
+    "could",
+    "would",
+    "about",
+    "hai",
+    "ka",
+    "ki",
+    "ke",
+    "mujhe",
+    "kya",
+  ]);
+  const tokens = tokenize(query).filter((token) => !ignoredTokens.has(token));
+  if (tokens.length === 0) return [];
 
   return sources
     .map((source) => {
@@ -352,7 +497,7 @@ function rankSources(query: string, sources: RagSource[]) {
       );
       return { source, score };
     })
-    .filter((item) => item.score > 0)
+    .filter((item) => item.score >= 3)
     .sort((a, b) => b.score - a.score)
     .map((item) => item.source);
 }

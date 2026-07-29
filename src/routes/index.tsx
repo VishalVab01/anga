@@ -27,7 +27,6 @@ import {
   ShieldCheck,
   Signal,
   Sparkles,
-  Star,
   Users,
   Wallet,
   Wifi,
@@ -36,6 +35,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, useLayoutEffect, useState } from "react";
+import { PhoneMockup } from "@/components/PhoneMockup";
 import { api } from "@/lib/api";
 import defaultWorkerProfileImage from "@/assets/profile/construction-worker.png";
 
@@ -183,26 +183,8 @@ const impact = [
   },
 ];
 
-const testimonials = [
-  {
-    quote:
-      "Anga makes daily-wage hiring simple. We can post a job, compare workers and assign someone nearby quickly.",
-    name: "Demo Customer",
-    role: "Homeowner",
-  },
-  {
-    quote:
-      "The app shows wage, location and timing clearly. Workers know what they are applying for before calling.",
-    name: "Demo Worker",
-    role: "Electrician",
-  },
-  {
-    quote:
-      "The AI assistant helps judges and users understand the platform without needing to explore every screen.",
-    name: "Hackathon Demo",
-    role: "Rozgar category",
-  },
-];
+const mentorTestimonialQuote =
+  "“Anga thoughtfully brings AI, local hiring and trust into one clear experience. It has strong potential to make daily-wage opportunities easier to discover and local workers easier to hire.”";
 
 const faqs = [
   {
@@ -246,6 +228,12 @@ function Landing() {
   if (demoMode) {
     return (
       <main className="landing-demo-stage min-h-screen">
+        <img
+          className="final-cta-background demo-stage-background"
+          src="/zentivo-cta-sky.png"
+          alt=""
+          aria-hidden="true"
+        />
         <button
           type="button"
           onClick={() => setDemoMode(false)}
@@ -255,31 +243,7 @@ function Landing() {
           <ArrowLeft className="h-4 w-4" />
           Back to home
         </button>
-        <div className="demo-phone-mockup">
-          <img
-            src="/demo/iphone-front-mockup.jpg"
-            alt=""
-            className="demo-phone-frame"
-            aria-hidden="true"
-          />
-          <div className="demo-phone-screen">
-            <div className="demo-phone-status-bar" aria-hidden="true">
-              <span className="demo-phone-status-time">9:41</span>
-              <span className="demo-phone-status-icons">
-                <Signal />
-                <Wifi />
-                <BatteryMedium />
-              </span>
-            </div>
-            <iframe
-              src="/app"
-              title="interactive Anga app demo"
-              className="demo-app-viewport"
-              loading="eager"
-            />
-            <span className="demo-phone-island" aria-hidden="true" />
-          </div>
-        </div>
+        <PhoneMockup src="/app" title="interactive Anga app demo" className="demo-live-phone" />
       </main>
     );
   }
@@ -576,7 +540,14 @@ function Landing() {
               </div>
             </div>
             <div className="workspace-phone-visual" aria-hidden="true">
-              <img src="/workspace-phone-blank.png" alt="" />
+              <img src="/workspace-phone-blank.png" alt="" className="workspace-phone-frame" />
+              <div className="workspace-phone-screen-mask">
+                <img
+                  src="/demo/workspace-assistant-screen.png"
+                  alt=""
+                  className="workspace-phone-screen-image"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -657,33 +628,38 @@ function Landing() {
       </section>
 
       <section className="zentivo-section reviews-section">
-        <div className="mx-auto max-w-[68rem] px-5 sm:px-8 lg:px-10">
-          <SectionHeader
-            eyebrow="Loved by users"
-            title="Designed For Workers, Customers And Judges"
-            text="The product is easy to understand in a demo and practical enough for real local employment use cases."
-          />
-          <div className="testimonial-rail grid lg:grid-cols-3">
-            {testimonials.map((item) => (
-              <article key={item.name} className="testimonial-card">
-                <div className="testimonial-stars flex gap-1 text-amber-400">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <Star key={index} className="fill-current" />
-                  ))}
-                </div>
-                <p className="testimonial-quote">"{item.quote}"</p>
-                <div className="testimonial-author flex items-center">
-                  <div className="testimonial-avatar grid place-items-center rounded-full bg-primary text-primary-foreground">
-                    {item.name.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-black">{item.name}</p>
-                    <p className="testimonial-role text-muted-foreground">{item.role}</p>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
+        <div className="mx-auto max-w-[76rem] px-5 sm:px-8 lg:px-10">
+          <article className="mentor-testimonial">
+            <blockquote aria-label={mentorTestimonialQuote}>
+              <span className="mentor-testimonial-animated-copy" aria-hidden="true">
+                {Array.from(mentorTestimonialQuote).map((character, index) =>
+                  character === " " ? (
+                    " "
+                  ) : (
+                    <span className="mentor-testimonial-char" key={`${character}-${index}`}>
+                      {character}
+                    </span>
+                  ),
+                )}
+              </span>
+            </blockquote>
+
+            <div className="mentor-testimonial-author">
+              <div className="mentor-testimonial-avatar">
+                <img src="/demo/suhas-vitthal-powar.png" alt="Suhas Vitthal Powar" />
+              </div>
+              <div>
+                <p>Suhas Vitthal Powar</p>
+                <span>Mentor — Build for Good 2026</span>
+              </div>
+            </div>
+
+            <div className="mentor-testimonial-pagination" aria-hidden="true">
+              <span />
+              <span className="is-active" />
+              <span />
+            </div>
+          </article>
         </div>
       </section>
 
@@ -1030,11 +1006,14 @@ function useLandingAnimations(demoMode: boolean) {
         {
           y: () => -Math.min(260, window.innerHeight * 0.28),
           ease: "none",
+          force3D: true,
           scrollTrigger: {
             trigger: ".zentivo-hero",
             start: "top top",
             end: "bottom top",
-            scrub: 1.15,
+            // Lenis already smooths the scroll position. A timed scrub here added a second
+            // ~1s interpolation that visibly caught up when scrolling back into the hero.
+            scrub: true,
             invalidateOnRefresh: true,
           },
         },
@@ -1057,7 +1036,7 @@ function useLandingAnimations(demoMode: boolean) {
 
       gsap.utils
         .toArray<HTMLElement>(
-          ".zentivo-card, .step-card, .workspace-phone-visual, .growth-stat-card, .testimonial-card, .faq-row",
+          ".zentivo-card, .step-card, .workspace-phone-visual, .growth-stat-card, .mentor-testimonial, .faq-row",
         )
         .forEach((card) => {
           gsap.fromTo(
@@ -1073,6 +1052,26 @@ function useLandingAnimations(demoMode: boolean) {
             },
           );
         });
+
+      const testimonialCharacters = gsap.utils.toArray<HTMLElement>(".mentor-testimonial-char");
+      if (testimonialCharacters.length > 0) {
+        gsap.fromTo(
+          testimonialCharacters,
+          { opacity: 0.14 },
+          {
+            opacity: 1,
+            ease: "none",
+            stagger: 0.025,
+            scrollTrigger: {
+              trigger: ".mentor-testimonial blockquote",
+              start: "top 82%",
+              end: "bottom 42%",
+              scrub: 0.7,
+              invalidateOnRefresh: true,
+            },
+          },
+        );
+      }
 
       gsap.fromTo(
         ".workspace-copy > h2, .workspace-copy > p",

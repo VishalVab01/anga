@@ -6,6 +6,7 @@ const customerProfileSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true, maxlength: 80 },
     phone: { type: String, required: true, trim: true, maxlength: 20 },
     address: { type: String, default: "", trim: true, maxlength: 180 },
+    photoUrl: { type: String, default: "", maxlength: 1000000 },
     customerType: {
       type: String,
       enum: ["homeowner", "shop_owner", "contractor", "other"],

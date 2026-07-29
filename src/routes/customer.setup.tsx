@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
   Building2,
+  Camera,
   Check,
   Home,
   Loader2,
@@ -73,6 +74,9 @@ function CustomerSetup() {
   const [editing] = useState(() => isProfileComplete("customer"));
   const [profileData, setProfileData] = useState<Record<string, unknown> | null>(cachedProfile);
   const [loadingExistingProfile, setLoadingExistingProfile] = useState(editing);
+  const [photoUrl, setPhotoUrl] = useState(() =>
+    typeof cachedProfile?.photoUrl === "string" ? cachedProfile.photoUrl : "",
+  );
   const [ownerType, setOwnerType] = useState<CustomerType>(() => {
     const saved = cachedProfile?.customerType;
     return saved === "shop_owner" || saved === "contractor" ? saved : "homeowner";
@@ -88,6 +92,7 @@ function CustomerSetup() {
         const profile = result.profile as ApiCustomerProfile | null;
         if (cancelled || !profile) return;
         setProfileData({ ...profile });
+        setPhotoUrl(profile.photoUrl || "");
         if (
           profile.customerType === "homeowner" ||
           profile.customerType === "shop_owner" ||
@@ -116,6 +121,7 @@ function CustomerSetup() {
       name: String(data.get("name") || "").trim(),
       phone: String(data.get("phone") || "").trim(),
       address: String(data.get("address") || "").trim(),
+      photoUrl,
       customerType: ownerType,
     };
 
@@ -191,6 +197,47 @@ function CustomerSetup() {
                     </p>
                   </div>
                 </div>
+
+                <label className="flex cursor-pointer items-center gap-3 rounded-[1.25rem] bg-primary/[0.045] p-3 transition hover:bg-primary/[0.07]">
+                  {photoUrl ? (
+                    <img
+                      src={photoUrl}
+                      alt="Customer profile preview"
+                      className="h-16 w-16 shrink-0 rounded-full object-cover shadow-md ring-2 ring-white"
+                    />
+                  ) : (
+                    <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-white text-primary shadow-sm">
+                      <Camera className="h-5 w-5" />
+                    </span>
+                  )}
+                  <span className="min-w-0 flex-1">
+                    <span className="customer-card-title block text-sm">
+                      {photoUrl ? "Change profile photo" : "Add profile photo"}
+                    </span>
+                    <span className="mt-1 block text-[10px] leading-4 text-muted-foreground">
+                      A clear photo helps workers recognize you
+                    </span>
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={async (event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
+                        toast.error("Choose an image smaller than 5 MB");
+                        return;
+                      }
+                      try {
+                        setPhotoUrl(await fileToProfilePhotoDataUrl(file));
+                        toast.success("Profile photo added");
+                      } catch {
+                        toast.error("Could not prepare photo");
+                      }
+                    }}
+                  />
+                </label>
 
                 <Field label="Full name" hint="Workers will see this on your requests">
                   <Input
@@ -327,6 +374,39 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
       {children}
     </label>
   );
+}
+
+function fileToProfilePhotoDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      const size = 320;
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      if (!context) {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Could not prepare photo"));
+        return;
+      }
+
+      canvas.width = size;
+      canvas.height = size;
+      const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
+      const sourceX = (image.naturalWidth - sourceSize) / 2;
+      const sourceY = (image.naturalHeight - sourceSize) / 2;
+      context.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, size, size);
+      URL.revokeObjectURL(objectUrl);
+      resolve(canvas.toDataURL("image/jpeg", 0.82));
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Could not read photo"));
+    };
+    image.src = objectUrl;
+  });
 }
 
 function Input(props: InputHTMLAttributes<HTMLInputElement>) {

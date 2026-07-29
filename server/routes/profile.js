@@ -103,6 +103,7 @@ profileRouter.put(
         name,
         phone,
         address,
+        photoUrl: body.photoUrl || "",
         customerType,
       },
       { upsert: true, new: true, runValidators: true },

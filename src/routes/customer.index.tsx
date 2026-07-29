@@ -54,16 +54,21 @@ function CustomerHome() {
     setProfile(getProfile("customer"));
     let cancelled = false;
 
-    void Promise.allSettled([api.workers("?availableToday=true"), api.notifications()]).then(
-      ([workerResult, notificationResult]) => {
-        if (cancelled) return;
-        if (workerResult.status === "fulfilled") setApiWorkers(workerResult.value.workers);
-        if (notificationResult.status === "fulfilled") {
-          setNotifications(notificationResult.value.notifications);
-        }
-        setLoadingWorkers(false);
-      },
-    );
+    void Promise.allSettled([
+      api.workers("?availableToday=true"),
+      api.notifications(),
+      api.profile(),
+    ]).then(([workerResult, notificationResult, profileResult]) => {
+      if (cancelled) return;
+      if (workerResult.status === "fulfilled") setApiWorkers(workerResult.value.workers);
+      if (notificationResult.status === "fulfilled") {
+        setNotifications(notificationResult.value.notifications);
+      }
+      if (profileResult.status === "fulfilled" && profileResult.value.profile) {
+        setProfile({ ...profileResult.value.profile });
+      }
+      setLoadingWorkers(false);
+    });
 
     return () => {
       cancelled = true;
@@ -107,6 +112,8 @@ function CustomerHome() {
   ).slice(0, 4);
   const customerName = String(profile?.name || "Demo Customer");
   const customerAddress = String(profile?.address || profile?.location || "Add hiring location");
+  const customerPhoto = typeof profile?.photoUrl === "string" ? profile.photoUrl : "";
+  const customerInitial = customerName.trim().charAt(0).toUpperCase() || "C";
   const hasUnreadNotifications = notifications.some((item) => !item.read);
 
   return (
@@ -115,17 +122,34 @@ function CustomerHome() {
         <header className="relative z-20 bg-primary px-4 pb-5 pt-5 text-primary-foreground">
           <span className="pointer-events-none absolute -right-14 -top-20 h-52 w-52 rounded-full bg-white/10 blur-3xl" />
           <div className="relative flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <h1 className="customer-profile-name truncate text-base leading-tight">
-                Hi, {customerName}
-              </h1>
+            <div className="flex min-w-0 items-center gap-3">
               <Link
                 to="/customer/profile"
-                className="mt-1 flex max-w-[13rem] items-center gap-1 text-[11px] text-primary-foreground/70"
+                aria-label="Open customer profile"
+                className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-white/35 bg-white/18 text-base font-bold text-white shadow-lg shadow-blue-950/15"
               >
-                <MapPin className="h-3 w-3 shrink-0" />
-                <span className="truncate">{customerAddress}</span>
+                {customerPhoto ? (
+                  <img
+                    src={customerPhoto}
+                    alt={`${customerName}'s profile`}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  customerInitial
+                )}
               </Link>
+              <div className="min-w-0">
+                <h1 className="customer-profile-name truncate text-base leading-tight">
+                  Hi, {customerName}
+                </h1>
+                <Link
+                  to="/customer/profile"
+                  className="mt-1 flex max-w-[13rem] items-center gap-1 text-[11px] text-primary-foreground/70"
+                >
+                  <MapPin className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{customerAddress}</span>
+                </Link>
+              </div>
             </div>
 
             <div className="flex shrink-0 items-center gap-2">

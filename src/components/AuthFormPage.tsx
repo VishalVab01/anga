@@ -214,25 +214,32 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
   };
 
   return (
-    <main className="anga-app-shell h-[100dvh] overflow-hidden bg-background text-foreground">
-      <div className="mx-auto flex h-full max-w-md flex-col px-6 pb-[max(0.875rem,env(safe-area-inset-bottom))] pt-[max(0.875rem,env(safe-area-inset-top))]">
-        <Link to="/app" className="mx-auto inline-flex items-center gap-2" aria-label="Anga home">
-          <span className="auth-brand text-[2.25rem] leading-none tracking-[-0.045em] text-primary">
-            anga
-          </span>
+    <main className="anga-app-shell auth-reference-page min-h-[100dvh] overflow-y-auto text-foreground">
+      <div
+        className={`auth-reference-card mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] ${isSignup ? "is-signup" : "is-login"}`}
+      >
+        <Link
+          to="/app"
+          className="auth-reference-brand mx-auto inline-flex items-center gap-2"
+          aria-label="Anga home"
+        >
+          <span className="auth-brand leading-none text-white">anga</span>
         </Link>
 
         {isSignup ? (
-          <div className="h-[clamp(1.25rem,4dvh,2.5rem)] shrink-0" aria-hidden="true" />
+          <div
+            className="auth-reference-spacer h-[clamp(1rem,3dvh,1.75rem)] shrink-0"
+            aria-hidden="true"
+          />
         ) : (
           <div
-            className="h-[clamp(2.5rem,9dvh,5rem)] shrink-0"
+            className="auth-reference-spacer h-[clamp(1.75rem,5dvh,3rem)] shrink-0"
             aria-label="Reserved space for login illustration"
             role="img"
           />
         )}
 
-        <section>
+        <section className="auth-reference-intro">
           <h1 className="auth-heading text-[2.2rem] leading-none tracking-[-0.045em]">
             {isSignup ? "Sign Up" : "Welcome Back"}
           </h1>
@@ -248,7 +255,11 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
         </section>
 
         {useMobile ? (
-          <form key="mobile" onSubmit={submitMobile} className="mt-4 grid gap-2.5">
+          <form
+            key="mobile"
+            onSubmit={submitMobile}
+            className="auth-reference-form mt-4 grid gap-3"
+          >
             <div className="mb-0.5 flex items-center gap-2 text-xs text-muted-foreground">
               <span className="grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-primary">
                 <Smartphone className="h-4 w-4" aria-hidden="true" />
@@ -257,7 +268,7 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
             </div>
 
             <label className="block">
-              <span className="sr-only">Mobile number</span>
+              <span className="auth-reference-label">Mobile number</span>
               <input
                 type="tel"
                 inputMode="numeric"
@@ -278,7 +289,7 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
             </label>
 
             <label className="block">
-              <span className="sr-only">One-time password</span>
+              <span className="auth-reference-label">One-time password</span>
               <input
                 type="text"
                 inputMode="numeric"
@@ -305,7 +316,7 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
                 type="button"
                 onClick={sendMobileOtp}
                 disabled={otpLoading}
-                className="flex min-h-11 items-center justify-center gap-2 rounded-full border border-primary bg-card px-3 text-sm text-primary transition active:scale-[0.98] disabled:opacity-60"
+                className="auth-reference-secondary flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 text-sm transition active:scale-[0.98] disabled:opacity-60"
               >
                 {otpLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                 {otpSent ? "Resend OTP" : "Send OTP"}
@@ -313,7 +324,7 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
               <button
                 type="submit"
                 disabled={submitting || !otpSent}
-                className="flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-3 text-sm text-primary-foreground shadow-lg shadow-primary/20 transition active:scale-[0.98] disabled:opacity-50"
+                className="auth-reference-primary flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 text-sm transition active:scale-[0.98] disabled:opacity-50"
               >
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 Verify & continue
@@ -327,16 +338,16 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
                 setFormMessage("");
                 setAuthMethod("credentials");
               }}
-              className="mx-auto min-h-8 px-3 text-xs text-primary"
+              className="auth-reference-text-button mx-auto min-h-8 px-3 text-xs"
             >
               Use email and password instead
             </button>
           </form>
         ) : (
-          <form key="credentials" onSubmit={submit} className="mt-4 grid gap-2.5">
+          <form key="credentials" onSubmit={submit} className="auth-reference-form mt-4 grid gap-3">
             {isSignup && (
               <label className="block">
-                <span className="sr-only">Full name</span>
+                <span className="auth-reference-label">Full name</span>
                 <input
                   type="text"
                   name="name"
@@ -349,7 +360,7 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
             )}
 
             <label className="block">
-              <span className="sr-only">Email address</span>
+              <span className="auth-reference-label">Email address</span>
               <input
                 type="email"
                 name="email"
@@ -361,7 +372,9 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
             </label>
 
             <label className="block">
-              <span className="sr-only">{isSignup ? "Create password" : "Enter password"}</span>
+              <span className="auth-reference-label">
+                {isSignup ? "Create password" : "Password"}
+              </span>
               <input
                 type="password"
                 name="password"
@@ -377,7 +390,7 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
 
             {isSignup && (
               <label className="block">
-                <span className="sr-only">Re-enter password</span>
+                <span className="auth-reference-label">Confirm password</span>
                 <input
                   type="password"
                   name="confirmPassword"
@@ -401,7 +414,7 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
             <button
               type="submit"
               disabled={submitting}
-              className="mt-1 min-h-11 w-full rounded-full bg-primary px-5 text-sm text-primary-foreground shadow-lg shadow-primary/20 transition active:scale-[0.98] disabled:opacity-60"
+              className="auth-reference-primary mt-1 min-h-11 w-full rounded-xl px-5 text-sm transition active:scale-[0.98] disabled:opacity-60"
             >
               {submitting ? (
                 <span className="inline-flex items-center gap-2">
@@ -417,7 +430,7 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
             <button
               type="button"
               onClick={continueWithMobile}
-              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-primary bg-card px-5 text-sm text-primary transition active:scale-[0.98]"
+              className="auth-reference-secondary flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm transition active:scale-[0.98]"
             >
               <Smartphone className="h-4 w-4" aria-hidden="true" />
               {isSignup ? "Sign up with mobile number" : "Sign in with mobile number"}
@@ -427,7 +440,7 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
               <button
                 type="button"
                 onClick={continueWithMobile}
-                className="mx-auto text-xs text-primary"
+                className="auth-reference-text-button mx-auto text-xs"
               >
                 Forgot your password?
               </button>
@@ -435,18 +448,18 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
           </form>
         )}
 
-        <div className="my-3 flex items-center gap-3 text-[0.7rem] text-muted-foreground">
+        <div className="auth-reference-divider my-4 flex items-center gap-3 text-[0.7rem]">
           <span className="h-px flex-1 bg-border" />
           <span>Or use a demo account</span>
           <span className="h-px flex-1 bg-border" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="auth-reference-demo-grid grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => startDemo("worker")}
             disabled={Boolean(demoLoading)}
-            className="flex min-h-10 items-center justify-center gap-2 rounded-full border border-border bg-card px-3 text-xs transition active:scale-[0.98]"
+            className="auth-reference-demo flex min-h-10 items-center justify-center gap-2 rounded-xl px-3 text-xs transition active:scale-[0.98]"
           >
             {demoLoading === "worker" && <Loader2 className="h-4 w-4 animate-spin" />}
             Demo Worker
@@ -455,7 +468,7 @@ export function AuthFormPage({ mode }: AuthFormPageProps) {
             type="button"
             onClick={() => startDemo("customer")}
             disabled={Boolean(demoLoading)}
-            className="flex min-h-10 items-center justify-center gap-2 rounded-full border border-border bg-card px-3 text-xs transition active:scale-[0.98]"
+            className="auth-reference-demo flex min-h-10 items-center justify-center gap-2 rounded-xl px-3 text-xs transition active:scale-[0.98]"
           >
             {demoLoading === "customer" && <Loader2 className="h-4 w-4 animate-spin" />}
             Demo Customer

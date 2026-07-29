@@ -80,6 +80,7 @@ export type ApiCustomerProfile = {
   name: string;
   phone: string;
   address: string;
+  photoUrl?: string;
   customerType: string;
   rating: number;
 };

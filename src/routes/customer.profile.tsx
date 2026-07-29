@@ -144,8 +144,16 @@ function Profile() {
         <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary via-[#2f6fec] to-[#7da2ff] p-5 text-primary-foreground shadow-2xl shadow-primary/20">
           <div className="pointer-events-none absolute -right-14 -top-14 h-40 w-40 rounded-full bg-white/15 blur-2xl" />
           <div className="relative flex items-start gap-4">
-            <div className="grid h-20 w-20 shrink-0 place-items-center rounded-[1.7rem] border-4 border-white/35 bg-white/18 text-3xl font-black shadow-xl">
-              {avatarInitial}
+            <div className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-[1.7rem] border-4 border-white/35 bg-white/18 text-3xl font-black shadow-xl">
+              {profile.photoUrl ? (
+                <img
+                  src={profile.photoUrl}
+                  alt={`${profile.name}'s profile`}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                avatarInitial
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
